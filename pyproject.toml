@@ -1,0 +1,80 @@
+[build-system]
+requires = ["hatchling>=1.21"]
+build-backend = "hatchling.build"
+
+[project]
+name = "digilab"
+version = "0.1.0"
+description = "NAND-based digital circuit synthesizer + verifier with breadboard-friendly netlist output"
+readme = "README.md"
+requires-python = ">=3.9"
+license = "BSD-3-Clause"
+authors = [
+  { name = "digilab contributors" },
+]
+keywords = [
+  "digital-logic",
+  "circuit-synthesis",
+  "nand",
+  "breadboard",
+  "education",
+  "74-series",
+  "verifier",
+  "eda",
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Education",
+  "Intended Audience :: Developers",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Education",
+  "Topic :: Scientific/Engineering",
+  "Typing :: Typed",
+]
+dependencies = [
+  "networkx>=3.0",
+  "pandas>=2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=7.0",
+  "ruff>=0.4",
+  "mypy>=1.8",
+  "coverage[toml]>=7.0",
+]
+
+[project.scripts]
+digilab = "digilab.cli:main"
+
+# URLs are placeholders until the GitHub repository is published.
+[project.urls]
+Homepage = "https://github.com/digilab-harness/digilab"
+Source = "https://github.com/digilab-harness/digilab"
+Issues = "https://github.com/digilab-harness/digilab/issues"
+
+# --- hatchling build configuration ---
+[tool.hatch.build.targets.wheel]
+packages = ["src/digilab"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "src/digilab",
+  "tests",
+  "README.md",
+  "CHANGELOG.md",
+  "LICENSE",
+  "pyproject.toml",
+]
+
+# --- pytest configuration (kept minimal here; Phase B lint_quality will
+#     add ruff / mypy / coverage configs in this same file) ---
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
