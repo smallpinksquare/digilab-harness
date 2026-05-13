@@ -1,0 +1,11 @@
+{
+  "experiment": "实验2_2",
+  "description": "发电机控制器（用 74138 译码器实现）",
+  "source_file": "../实验二/2：发电机控制器（用 74138 译码器实现）.md",
+  "expression_file": "../真值表与逻辑表达式/实验2_2_表达式.md",
+  "truth_table_file": "../真值表与逻辑表达式/实验2_2_真值表.md",
+  "chips": ["74138 x 1", "7420 x 1", "7400 x 1"],
+  "inputs": ["A", "B", "C"],
+  "outputs": ["X", "Y"],
+  "max_iterations": 3
+}

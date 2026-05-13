@@ -1,0 +1,11 @@
+{
+  "experiment": "实验1_2",
+  "description": "4 位二进制数值判别电路 (3 ≤ N ≤ 6)",
+  "source_file": "../实验一/（2）/2.md",
+  "expression_file": "../真值表与逻辑表达式/实验1_2_表达式.md",
+  "truth_table_file": "../真值表与逻辑表达式/实验1_2_真值表.md",
+  "chips": ["7400 x 1", "7420 x 1"],
+  "inputs": ["B3", "B2", "B1", "B0"],
+  "outputs": ["Y"],
+  "max_iterations": 3
+}

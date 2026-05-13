@@ -1,0 +1,253 @@
+{
+  "chips": [
+    {
+      "name": "7400_A",
+      "type": "7400"
+    },
+    {
+      "name": "7420_A",
+      "type": "7420"
+    }
+  ],
+  "inputs": [
+    "B3",
+    "B2",
+    "B1",
+    "B0"
+  ],
+  "outputs": [
+    "Y"
+  ],
+  "connections": [
+    {
+      "from": {
+        "chip": "INPUT",
+        "pin": "B0"
+      },
+      "to": {
+        "chip": "7400_A",
+        "pin": 5
+      }
+    },
+    {
+      "from": {
+        "chip": "INPUT",
+        "pin": "B1"
+      },
+      "to": {
+        "chip": "7400_A",
+        "pin": 4
+      }
+    },
+    {
+      "from": {
+        "chip": "INPUT",
+        "pin": "B2"
+      },
+      "to": {
+        "chip": "7400_A",
+        "pin": 9
+      }
+    },
+    {
+      "from": {
+        "chip": "INPUT",
+        "pin": "B3"
+      },
+      "to": {
+        "chip": "7400_A",
+        "pin": 1
+      }
+    },
+    {
+      "from": {
+        "chip": "7400_A",
+        "pin": 1
+      },
+      "to": {
+        "chip": "7400_A",
+        "pin": 2
+      }
+    },
+    {
+      "from": {
+        "chip": "7400_A",
+        "pin": 3
+      },
+      "to": {
+        "chip": "7420_A",
+        "pin": 1
+      }
+    },
+    {
+      "from": {
+        "chip": "7400_A",
+        "pin": 4
+      },
+      "to": {
+        "chip": "7420_A",
+        "pin": 12
+      }
+    },
+    {
+      "from": {
+        "chip": "7400_A",
+        "pin": 5
+      },
+      "to": {
+        "chip": "7420_A",
+        "pin": 13
+      }
+    },
+    {
+      "from": {
+        "chip": "7400_A",
+        "pin": 6
+      },
+      "to": {
+        "chip": "7420_A",
+        "pin": 4
+      }
+    },
+    {
+      "from": {
+        "chip": "7400_A",
+        "pin": 7
+      },
+      "to": {
+        "chip": "GND",
+        "pin": 0
+      }
+    },
+    {
+      "from": {
+        "chip": "7400_A",
+        "pin": 8
+      },
+      "to": {
+        "chip": "7420_A",
+        "pin": 10
+      }
+    },
+    {
+      "from": {
+        "chip": "7400_A",
+        "pin": 9
+      },
+      "to": {
+        "chip": "7400_A",
+        "pin": 10
+      }
+    },
+    {
+      "from": {
+        "chip": "7400_A",
+        "pin": 10
+      },
+      "to": {
+        "chip": "7420_A",
+        "pin": 2
+      }
+    },
+    {
+      "from": {
+        "chip": "7400_A",
+        "pin": 11
+      },
+      "to": {
+        "chip": "OUTPUT",
+        "pin": "Y"
+      }
+    },
+    {
+      "from": {
+        "chip": "7400_A",
+        "pin": 14
+      },
+      "to": {
+        "chip": "VCC",
+        "pin": 0
+      }
+    },
+    {
+      "from": {
+        "chip": "7420_A",
+        "pin": 1
+      },
+      "to": {
+        "chip": "7420_A",
+        "pin": 5
+      }
+    },
+    {
+      "from": {
+        "chip": "7420_A",
+        "pin": 3
+      },
+      "to": {
+        "chip": "NC",
+        "pin": 0
+      }
+    },
+    {
+      "from": {
+        "chip": "7420_A",
+        "pin": 5
+      },
+      "to": {
+        "chip": "7420_A",
+        "pin": 9
+      }
+    },
+    {
+      "from": {
+        "chip": "7420_A",
+        "pin": 6
+      },
+      "to": {
+        "chip": "7400_A",
+        "pin": 12
+      }
+    },
+    {
+      "from": {
+        "chip": "7420_A",
+        "pin": 7
+      },
+      "to": {
+        "chip": "GND",
+        "pin": 0
+      }
+    },
+    {
+      "from": {
+        "chip": "7420_A",
+        "pin": 8
+      },
+      "to": {
+        "chip": "7400_A",
+        "pin": 13
+      }
+    },
+    {
+      "from": {
+        "chip": "7420_A",
+        "pin": 11
+      },
+      "to": {
+        "chip": "NC",
+        "pin": 0
+      }
+    },
+    {
+      "from": {
+        "chip": "7420_A",
+        "pin": 14
+      },
+      "to": {
+        "chip": "VCC",
+        "pin": 0
+      }
+    }
+  ]
+}

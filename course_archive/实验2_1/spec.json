@@ -1,0 +1,11 @@
+{
+  "experiment": "实验2_1",
+  "description": "血型配对（用 74151 数据选择器实现）",
+  "source_file": "../实验二/1：血型配对（用 74153 数据选择器实现）.md",
+  "expression_file": "../真值表与逻辑表达式/实验2_1_表达式.md",
+  "truth_table_file": "../真值表与逻辑表达式/实验2_1_真值表.md",
+  "chips": ["74151 x 1"],
+  "inputs": ["A1", "A0", "B1", "B0"],
+  "outputs": ["F"],
+  "max_iterations": 3
+}
