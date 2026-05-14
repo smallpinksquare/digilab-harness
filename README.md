@@ -1,139 +1,109 @@
-# 模拟电路项目
+# digilab
 
-按 [模拟电路程序harness.md](模拟电路程序harness.md) 与 [harness附录.md](harness附录.md) 规范实现的
-**电路综合 / 验证 pipeline**。
+[![CI](https://github.com/digilab-harness/digilab/actions/workflows/ci.yml/badge.svg)](https://github.com/digilab-harness/digilab/actions/workflows/ci.yml)
+[![License: BSD-3-Clause](https://img.shields.io/badge/license-BSD--3--Clause-blue.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.9%20%7C%203.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue)](pyproject.toml)
 
----
+**digilab** synthesises NAND-based combinational logic circuits from a short
+expression DSL, verifies them against a truth table, and produces
+breadboard-friendly wiring instructions (`circuit.txt`).
 
-## 1. 目录结构
-
-```
-模拟电路项目/
-├── chips/                      # 器件库（每型号一个文件）
-│   ├── __init__.py             # PinType / Pin / ChipSpec 基类
-│   ├── chip_7400.py            # 7400 四 2 输入与非
-│   ├── chip_7420.py            # 7420 双 4 输入与非
-│   └── registry.py             # 型号 → 类的注册表
-├── common/                     # 共享工具
-│   ├── netlist.py              # Netlist 数据结构 + JSON I/O + 排序
-│   ├── ast_nodes.py            # 表达式 AST
-│   ├── parser.py               # 表达式文件解析
-│   └── tt_io.py                # 真值表 md ↔ CSV
-├── synthesizer.py              # 程序1：表达式 → circuit.txt + netlist.json
-├── verifier.py                 # 程序2：netlist + 期望真值表 → 验证报告
-├── tests/test_smoke.py         # 端到端 smoke 测试
-├── 真值表与逻辑表达式/         # 用户输入文件夹（每个实验放一对 md）
-└── 实验x/                      # 每个具体实验的产物（agent 创建）
-```
+> Chinese README: [README.zh-CN.md](README.zh-CN.md)
 
 ---
 
-## 2. 安装
+## Quick start
 
 ```bash
-pip install -r requirements.txt
+git clone https://github.com/digilab-harness/digilab
+cd digilab-harness
+pip install -e ".[dev]"
 ```
 
-需要 Python 3.9+。
+Write a small expression file:
 
----
-
-## 3. 使用
-
-### 综合（程序1）
-
-```bash
-python synthesizer.py \
-    --expr 真值表与逻辑表达式/示例_表达式.md \
-    --out 实验示例
-```
-
-产出：`实验示例/circuit.txt`、`实验示例/netlist.json`。
-
-### 验证（程序2）
-
-```bash
-python verifier.py \
-    --netlist 实验示例/netlist.json \
-    --truth   实验示例/truth_table.csv \
-    --out     实验示例
-```
-
-产出：`实验示例/actual_truth_table.csv`、`实验示例/verify_report.json`。
-
-### Smoke 测试
-
-```bash
-pytest tests/
-```
-
----
-
-## 4. 表达式文件格式
-
-参见 [真值表与逻辑表达式/README.md](真值表与逻辑表达式/README.md)
-和 [真值表与逻辑表达式/示例_表达式.md](真值表与逻辑表达式/示例_表达式.md)。
-
-简要：
-
-```
-chips: 7400 x 1
-inputs: A, B
+```txt
+chips:   7400 x 1
+inputs:  A, B
 outputs: F
 
 F = NAND2(A, B)
 ```
 
----
+Synthesise and verify:
 
-## 5. 扩展新器件
-
-只需在 `chips/` 下新建 `chip_xxxx.py`，继承 `ChipSpec`，并在 `chips/registry.py`
-中注册即可。`synthesizer.py` 与 `verifier.py` 无需任何改动。
-
----
-
-## 6. 当前能力清单（Step 1-4）
-
-### 6.1 已注册器件
-
-- `7400`：四个 2 输入与非门（NAND2）
-- `7420`：两个 4 输入与非门（NAND4）
-- `74138`：3-8 译码器（高层原语 `DECODE3`）
-- `74153`：双 4 选 1 数据选择器（当前暴露通道 1，高层原语 `MUX4`）
-- `74151`：8 选 1 数据选择器（双互补输出 Y / Ȳ，高层原语 `MUX8`）
-
-### 6.2 已支持表达式原语
-
-- 门级原语：`NAND2(...)`、`NAND4(...)`
-- 高层原语：`DECODE3(C, B, A)`、`MUX4(B, A, C0, C1, C2, C3)`、`MUX8(C, B, A, D0, D1, D2, D3, D4, D5, D6, D7)`
-- 字面量：`0`、`1`（分别映射到 GND / VCC，并支持物理接线优化）
-- 中间变量：`T1 = ...`，后续表达式可引用（必须先定义后使用）
-
-### 6.3 多 LHS 语法示例
-
-```txt
-chips:   74138 x 1
-inputs:  C, B, A
-outputs: Y0, Y1, Y2, Y3, Y4, Y5, Y6, Y7
-
-Y0, Y1, Y2, Y3, Y4, Y5, Y6, Y7 = DECODE3(C, B, A)
+```bash
+digilab synth  --expr expr.md --out /tmp/ex
+digilab verify --netlist /tmp/ex/netlist.json \
+               --truth   /tmp/ex/truth_table.csv \
+               --out     /tmp/ex
 ```
 
-双输出原语 `MUX8` 也用多 LHS 接收：
+Run the self-test for all registered chips:
 
-```txt
-chips:   74151 x 1
-inputs:  C, B, A, D0, D1, D2, D3, D4, D5, D6, D7
-outputs: Y
-
-Y, YBAR = MUX8(C, B, A, D0, D1, D2, D3, D4, D5, D6, D7)
+```bash
+digilab selftest
 ```
 
-> 多输出原语必须在赋值顶层使用；不允许把 `DECODE3` / `MUX4` / `MUX8` 嵌套到 `NAND2/NAND4` 内部。
-> `outputs:` 中未声明的 LHS（如上例的 `YBAR`）会作为内部信号保留，对应芯片输出引脚物理上悬空。
+---
 
-### 6.4 相关文档
+## Supported chips
 
-- 规范附录（含新增扩展说明）：[harness附录.md](harness附录.md)（见附录 H）
-- 器件库变更记录：[chips/CHANGELOG.md](chips/CHANGELOG.md)
+| Model | Primitive(s) | Gates / Blocks |
+|-------|-------------|----------------|
+| **7400** | `NAND2(a, b)` | 4 × 2-input NAND |
+| **7420** | `NAND4(a,b,c,d)` | 2 × 4-input NAND |
+| **74138** | `DECODE3(C,B,A)` → 8 outputs | 3-to-8 decoder |
+| **74153** | `MUX4(B,A,C0,C1,C2,C3)` | 4-to-1 mux |
+| **74151** | `MUX8(C,B,A,D0..D7)` → Y, YBAR | 8-to-1 mux (dual output) |
+
+Third-party chips can be registered via the `digilab.chips`
+[entry-point group](docs/chip_extension.md).
+
+---
+
+## Features
+
+- **Daisy-chain fanout** – a signal driving multiple inputs is routed as a
+  chain (`src → d0 → d1 → …`), minimising jump-wire runs on the board.
+- **VCC-input substitution** – unused gate inputs that would go to VCC are
+  connected to an existing input on the same gate, eliminating noisy floating
+  pull-ups.
+- **Auto CSE** – intermediate variables (`T = NAND2(A,A)`) are shared
+  automatically via structural Common Subexpression Elimination.
+- **Multi-LHS primitives** – MSI blocks with multiple outputs use a natural
+  multi-assignment syntax (`Y0, …, Y7 = DECODE3(C,B,A)`).
+- **Strict typing** – full `mypy --strict` coverage; `py.typed` marker included.
+
+---
+
+## Development
+
+```bash
+ruff check .
+ruff format --check .
+mypy src/digilab
+pytest
+```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the full workflow.
+
+---
+
+## Documentation
+
+Full docs live under [`docs/`](docs/index.md):
+
+- [Architecture](docs/architecture.md)
+- [DSL Reference](docs/dsl_reference.md)
+- [Physical Wiring](docs/physical_wiring.md)
+- [Chip Extension](docs/chip_extension.md)
+
+Course-specific materials (experiments, truth tables, wiring guides) are in
+[`course_archive/`](course_archive/README.md).
+
+---
+
+## License
+
+[BSD 3-Clause](LICENSE) © 2026 digilab contributors
