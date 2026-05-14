@@ -4,6 +4,14 @@
 
 ---
 
+## [Phase B] 开源仓库：registry 插件入口 + CLI selftest 与型号同步
+
+- `registry.py`：除内置 `_MODULES` 外，加载 `importlib.metadata` 组 `digilab.chips` 的 entry-point；同名型号以内置为准。
+- `cli.py`：`digilab selftest` 按 `list_models()` 动态导入 `chip_<model>`，与注册表一致。
+- 测试：`tests/test_registry.py` 覆盖 `_plugin_spec_from_loaded` 与内置型号集合。
+
+---
+
 ## [Step 5] 新增 74151 + MUX8（双输出 8 选 1）
 
 - 动机：实验 2_1（血型配对）改用 8 选 1 数据选择器实现，4 变量场景下 1 片即可覆盖、零外部门；同时验证"双输出原语"在 Block/Primitive 抽象下的可扩展性。

@@ -3,6 +3,7 @@
 CSV 第一行：所有输入变量 → 所有输出变量。
 md 表格：第一列为表头，含所有输入与输出列。
 """
+
 from __future__ import annotations
 
 import csv
@@ -25,8 +26,9 @@ def _normalize_cell(s: str) -> str:
 
 # ---------- md → 行列结构 ----------
 
+
 def parse_md_table(text: str) -> Tuple[List[str], List[List[str]]]:
-    lines = [l.strip() for l in text.splitlines() if l.strip()]
+    lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
     table_rows: List[List[str]] = []
     for line in lines:
         if not line.startswith("|"):
@@ -45,11 +47,12 @@ def parse_md_table(text: str) -> Tuple[List[str], List[List[str]]]:
 
     for i, row in enumerate(body):
         if len(row) != len(header):
-            raise ValueError(f"第 {i+2} 行列数 {len(row)} 与表头 {len(header)} 不一致")
+            raise ValueError(f"第 {i + 2} 行列数 {len(row)} 与表头 {len(header)} 不一致")
     return header, body
 
 
 # ---------- CSV I/O ----------
+
 
 def write_csv(path: Path, header: Sequence[str], rows: Sequence[Sequence[str]]) -> None:
     path = Path(path)
@@ -73,6 +76,7 @@ def read_csv(path: Path) -> Tuple[List[str], List[List[str]]]:
 
 # ---------- 一站式：md 文件 → CSV 文件 ----------
 
+
 def md_file_to_csv(md_path: Path, csv_path: Path) -> Tuple[List[str], List[List[str]]]:
     text = Path(md_path).read_text(encoding="utf-8-sig")
     header, body = parse_md_table(text)
@@ -82,7 +86,10 @@ def md_file_to_csv(md_path: Path, csv_path: Path) -> Tuple[List[str], List[List[
 
 # ---------- 工具 ----------
 
-def split_io(header: Sequence[str], inputs: Sequence[str], outputs: Sequence[str]) -> Tuple[List[int], List[int]]:
+
+def split_io(
+    header: Sequence[str], inputs: Sequence[str], outputs: Sequence[str]
+) -> Tuple[List[int], List[int]]:
     """根据期望的 inputs/outputs 名字列表，从 header 中找出列序号。"""
     in_idx = []
     out_idx = []

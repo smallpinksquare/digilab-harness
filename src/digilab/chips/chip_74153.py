@@ -27,6 +27,7 @@
 并默认把 1G̅（pin 1）接 GND，使能有效。
 通道 2 本期不分配，相关引脚标记为 NC。
 """
+
 from __future__ import annotations
 
 from typing import List
@@ -68,7 +69,14 @@ def make_spec() -> ChipSpec:
     spec.pins[14] = Pin(number=14, type=PinType.INPUT, role="A")
 
     # 通道 2（本期闲置）
-    for pn, role in [(9, "2Y"), (10, "2C3"), (11, "2C2"), (12, "2C1"), (13, "2C0"), (15, "2G_BAR")]:
+    for pn, role in [
+        (9, "2Y"),
+        (10, "2C3"),
+        (11, "2C2"),
+        (12, "2C1"),
+        (13, "2C0"),
+        (15, "2G_BAR"),
+    ]:
         spec.pins[pn] = Pin(number=pn, type=PinType.NC, role=role)
 
     # 电源
@@ -78,8 +86,8 @@ def make_spec() -> ChipSpec:
     spec.blocks.append(
         Block(
             block_id=0,
-            inputs=[2, 14, 6, 5, 4, 3],   # B, A, C0, C1, C2, C3
-            outputs=[7],                   # 1Y
+            inputs=[2, 14, 6, 5, 4, 3],  # B, A, C0, C1, C2, C3
+            outputs=[7],  # 1Y
             func=_mux4_block_func,
             primitive="MUX4",
             default_enables=[(1, "GND")],  # 1G̅ 默认使能

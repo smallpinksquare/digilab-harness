@@ -15,11 +15,12 @@
   - md 文件中的 ``` 围栏会被忽略，方便直接放在 markdown 段落里
   - 大小写不敏感的关键字（chips/inputs/outputs / NAND2 / NAND4）
 """
+
 from __future__ import annotations
 
 import re
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Set, Tuple
 
 from .ast_nodes import Assignment, Const, Nand, Node, Primitive, Program, Var
 
@@ -29,9 +30,9 @@ _NAND_PATTERN = re.compile(r"^NAND(2|4)$", re.IGNORECASE)
 # 已识别的多 I/O 原语名 → 输出数。
 # 新增高层原语只需在此登记一行（且对应 chips/<chip_xxx>.py 提供同名 Block）。
 _PRIMITIVE_OUTPUT_COUNT = {
-    "DECODE3": 8,   # 74138：3 输入地址 → 8 路低有效输出
-    "MUX4": 1,      # 74153：4 选 1，多路输入单路输出
-    "MUX8": 2,      # 74151：8 选 1，11 路输入双互补输出 (Y, Ȳ)
+    "DECODE3": 8,  # 74138：3 输入地址 → 8 路低有效输出
+    "MUX4": 1,  # 74153：4 选 1，多路输入单路输出
+    "MUX8": 2,  # 74151：8 选 1，11 路输入双互补输出 (Y, Ȳ)
 }
 
 
@@ -40,6 +41,7 @@ class ParseError(ValueError):
 
 
 # ---------- 文件预处理 ----------
+
 
 def _strip_comment(line: str) -> str:
     if "#" in line:
@@ -186,11 +188,12 @@ def _parse_expr_text(text: str) -> Node:
     p = _Parser(_tokenize(text))
     node = p.parse_expr()
     if p.pos != len(p.tokens):
-        raise ParseError(f"表达式结尾有多余内容：{p.tokens[p.pos:]}")
+        raise ParseError(f"表达式结尾有多余内容：{p.tokens[p.pos :]}")
     return node
 
 
 # ---------- 头部声明 ----------
+
 
 def _parse_chips_decl(value: str) -> List[Tuple[str, int]]:
     out: List[Tuple[str, int]] = []
@@ -210,6 +213,7 @@ def _parse_id_list(value: str) -> List[str]:
 
 
 # ---------- 顶层入口 ----------
+
 
 def parse_program_text(text: str) -> Program:
     lines = _preprocess(text)
@@ -251,8 +255,7 @@ def parse_program_text(text: str) -> Program:
                     raise ParseError(f"未知多输出原语 {expr.name!r}")
                 if len(names) != expected:
                     raise ParseError(
-                        f"{expr.name} 输出数为 {expected}，"
-                        f"但 LHS 给出 {len(names)} 个名字：{names}"
+                        f"{expr.name} 输出数为 {expected}，但 LHS 给出 {len(names)} 个名字：{names}"
                     )
             else:
                 # 单 LHS 不允许调多输出原语（语义不明确）
@@ -261,11 +264,9 @@ def parse_program_text(text: str) -> Program:
                     if expected != 1:
                         raise ParseError(
                             f"原语 {expr.name} 输出 {expected} 路，"
-                            f"必须用多 LHS 接收（如 Y0, Y1, ..., Y{expected-1} = ...）"
+                            f"必须用多 LHS 接收（如 Y0, Y1, ..., Y{expected - 1} = ...）"
                         )
-            prog.assignments.append(
-                Assignment(name=names[0], expr=expr, extra_names=names[1:])
-            )
+            prog.assignments.append(Assignment(name=names[0], expr=expr, extra_names=names[1:]))
             continue
 
         raise ParseError(f"无法识别的行：{line!r}")
@@ -285,8 +286,13 @@ def parse_program_text(text: str) -> Program:
         declared_lhs.extend(a.all_names)
     declared_set = set(declared_lhs)
     if len(declared_set) != len(declared_lhs):
-        seen = set()
-        dup = [n for n in declared_lhs if n in seen or seen.add(n)]
+        seen: set[str] = set()
+        dup: list[str] = []
+        for n in declared_lhs:
+            if n in seen:
+                dup.append(n)
+            else:
+                seen.add(n)
         raise ParseError(f"赋值 LHS 重复：{sorted(set(dup))}")
 
     missing = set(prog.outputs) - declared_set
@@ -312,14 +318,13 @@ def parse_program_text(text: str) -> Program:
     return prog
 
 
-def _collect_var_refs(node) -> set:
-    from .ast_nodes import Const, Nand, Primitive, Var
+def _collect_var_refs(node: Node) -> Set[str]:
     if isinstance(node, Var):
         return {node.name}
     if isinstance(node, Const):
         return set()
     if isinstance(node, (Nand, Primitive)):
-        out = set()
+        out: Set[str] = set()
         for a in node.args:
             out |= _collect_var_refs(a)
         return out

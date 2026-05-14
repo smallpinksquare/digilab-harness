@@ -34,6 +34,7 @@
     G2B̅ (pin 5) → GND
 这三条连线由 synthesizer 在分配本 Block 时自动加入 netlist。
 """
+
 from __future__ import annotations
 
 from typing import List
@@ -104,8 +105,8 @@ def make_spec() -> ChipSpec:
     spec.blocks.append(
         Block(
             block_id=0,
-            inputs=[3, 2, 1],                           # C, B, A（高位→低位）
-            outputs=[15, 14, 13, 12, 11, 10, 9, 7],     # Y0..Y7
+            inputs=[3, 2, 1],  # C, B, A（高位→低位）
+            outputs=[15, 14, 13, 12, 11, 10, 9, 7],  # Y0..Y7
             func=_decode3_block_func,
             primitive="DECODE3",
             default_enables=[(6, "VCC"), (4, "GND"), (5, "GND")],
@@ -119,6 +120,7 @@ SPEC = make_spec()
 
 
 # ---------- 文件内自检：不依赖 pytest 也能跑 ----------
+
 
 def _self_check() -> None:
     """16 行真值表（8 地址 × 使能 on/off）。

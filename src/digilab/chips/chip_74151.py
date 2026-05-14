@@ -35,6 +35,7 @@
     Ē (pin 7) → GND
 此连线由 synthesizer 在分配本 Block 时自动加入 netlist。
 """
+
 from __future__ import annotations
 
 from typing import List
@@ -45,9 +46,7 @@ from . import Block, ChipSpec, Pin, PinType
 def mux8(bits: List[int]) -> List[int]:
     """完整 12 输入函数：[C, B, A, D0..D7, E_BAR] -> [Y, Y_BAR]。"""
     if len(bits) != 12:
-        raise ValueError(
-            f"74151 mux8 需要 12 位输入 [C,B,A,D0..D7,E_BAR]，收到 {len(bits)}"
-        )
+        raise ValueError(f"74151 mux8 需要 12 位输入 [C,B,A,D0..D7,E_BAR]，收到 {len(bits)}")
     c, b, a = bits[0], bits[1], bits[2]
     data = bits[3:11]
     e_bar = bits[11]
@@ -93,11 +92,11 @@ def make_spec() -> ChipSpec:
     spec.blocks.append(
         Block(
             block_id=0,
-            inputs=[9, 10, 11, 4, 3, 2, 1, 15, 14, 13, 12],   # C, B, A, D0..D7
-            outputs=[5, 6],                                    # Y, Y_BAR
+            inputs=[9, 10, 11, 4, 3, 2, 1, 15, 14, 13, 12],  # C, B, A, D0..D7
+            outputs=[5, 6],  # Y, Y_BAR
             func=_mux8_block_func,
             primitive="MUX8",
-            default_enables=[(7, "GND")],                      # Ē 默认使能
+            default_enables=[(7, "GND")],  # Ē 默认使能
         )
     )
 
@@ -108,6 +107,7 @@ SPEC = make_spec()
 
 
 # ---------- 文件内自检：不依赖 pytest 也能跑 ----------
+
 
 def _self_check() -> None:
     """16 行真值表（8 地址 × 使能 on/off）。

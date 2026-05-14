@@ -54,6 +54,7 @@ def nand2_truth(tmp_path: Path) -> Path:
 # digilab --version
 # ------------------------------------------------------------------
 
+
 def test_version():
     with pytest.raises(SystemExit) as exc:
         cli_main(["--version"])
@@ -64,6 +65,7 @@ def test_version():
 # digilab selftest
 # ------------------------------------------------------------------
 
+
 def test_selftest():
     rc = cli_main(["selftest"])
     assert rc == 0
@@ -72,6 +74,7 @@ def test_selftest():
 # ------------------------------------------------------------------
 # digilab synth
 # ------------------------------------------------------------------
+
 
 def test_synth(nand2_expr: Path, tmp_path: Path) -> None:
     out = tmp_path / "out"
@@ -90,6 +93,7 @@ def test_synth(nand2_expr: Path, tmp_path: Path) -> None:
 # digilab verify
 # ------------------------------------------------------------------
 
+
 def test_verify(nand2_expr: Path, nand2_truth: Path, tmp_path: Path) -> None:
     out = tmp_path / "out"
     # First synthesize so we have a netlist
@@ -97,15 +101,21 @@ def test_verify(nand2_expr: Path, nand2_truth: Path, tmp_path: Path) -> None:
 
     # Convert truth table md -> csv (verifier expects csv)
     from digilab.common.tt_io import md_file_to_csv
+
     csv_path = tmp_path / "truth.csv"
     md_file_to_csv(nand2_truth, csv_path)
 
-    rc = cli_main([
-        "verify",
-        "--netlist", str(out / "netlist.json"),
-        "--truth", str(csv_path),
-        "--out", str(out),
-    ])
+    rc = cli_main(
+        [
+            "verify",
+            "--netlist",
+            str(out / "netlist.json"),
+            "--truth",
+            str(csv_path),
+            "--out",
+            str(out),
+        ]
+    )
     assert rc == 0
     report = json.loads((out / "verify_report.json").read_text(encoding="utf-8"))
     assert report["failed"] == 0
@@ -116,10 +126,10 @@ def test_verify(nand2_expr: Path, nand2_truth: Path, tmp_path: Path) -> None:
 # digilab synth (error path: bad expr triggers SynthError / ParseError)
 # ------------------------------------------------------------------
 
+
 def test_synth_bad_expr(tmp_path: Path) -> None:
     bad = tmp_path / "bad.md"
-    bad.write_text("chips: 7400 x 1\ninputs: A\noutputs: F\nF = UNKNOWNPRIM(A)\n",
-                   encoding="utf-8")
+    bad.write_text("chips: 7400 x 1\ninputs: A\noutputs: F\nF = UNKNOWNPRIM(A)\n", encoding="utf-8")
     out = tmp_path / "out"
     # Should exit with non-zero (ParseError or SynthError)
     rc = cli_main(["synth", "--expr", str(bad), "--out", str(out)])

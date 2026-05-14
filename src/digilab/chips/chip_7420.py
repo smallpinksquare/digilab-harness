@@ -5,6 +5,7 @@
     门1  in: 9, 10, 12, 13   out: 8     （11 是 NC）
     电源: 14 = VCC    地: 7 = GND
 """
+
 from __future__ import annotations
 
 from typing import List

@@ -1,23 +1,49 @@
 # Python
 __pycache__/
 *.py[cod]
+*$py.class
+*.so
+.Python
+*.egg
 *.egg-info/
+.eggs/
+dist/
+build/
+*.manifest
+*.spec
+pip-wheel-metadata/
+
+# Virtual environments
 .venv/
 venv/
+ENV/
 .env
+.env.*
 
 # Test / coverage
 .pytest_cache/
 .coverage
+.coverage.*
 htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+.hypothesis/
 
-# Build / dist
-build/
-dist/
+# Type checkers / linters
+.mypy_cache/
+.ruff_cache/
 
-# IDE
+# IDE / OS
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
 
-# Local dev scratch
+# Local scratch
 *.log
+*.tmp

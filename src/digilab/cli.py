@@ -23,15 +23,9 @@ from typing import Sequence
 
 from . import __version__
 
-# Built-in chips with a self-check entry point. plugin_registry (Phase B)
-# will additionally enumerate entry-points dynamically.
-_CHIP_MODULES: list[str] = [
-    "chip_7400",
-    "chip_7420",
-    "chip_74138",
-    "chip_74153",
-    "chip_74151",
-]
+# chip_<model>.py naming matches every built-in (7400, 7420, 74138, …).
+# Plugin-only models must ship a module digilab_chips_<foo> with its own
+# selftest or register a chip_* module — for now selftest only imports chip_<model>.
 
 
 def _run_synth(argv: list[str]) -> int:
@@ -57,23 +51,26 @@ def _run_selftest(argv: list[str]) -> int:
     skipped: list[str] = []
     failed: list[str] = []
 
-    for name in _CHIP_MODULES:
-        full = f"digilab.chips.{name}"
+    from .chips.registry import list_models
+
+    for model in sorted(list_models()):
+        mod_name = f"chip_{model}"
+        full = f"digilab.chips.{mod_name}"
         try:
             mod = importlib.import_module(full)
         except Exception as exc:  # noqa: BLE001
-            failed.append(f"{name}: import error: {exc!r}")
+            failed.append(f"{mod_name}: import error: {exc!r}")
             continue
         fn = getattr(mod, "_self_check", None)
         if fn is None:
-            skipped.append(name)
+            skipped.append(mod_name)
             continue
         try:
             fn()
         except Exception as exc:  # noqa: BLE001
-            failed.append(f"{name}: {exc}")
+            failed.append(f"{mod_name}: {exc}")
         else:
-            passed.append(name)
+            passed.append(mod_name)
 
     print(f"passed:  {len(passed)}  {passed}")
     print(f"skipped: {len(skipped)} (no _self_check)  {skipped}")

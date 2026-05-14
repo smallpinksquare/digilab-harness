@@ -1,0 +1,5 @@
+* text=auto eol=lf
+
+# Course archive and large binaries: exclude from GitHub language stats
+course_archive/** linguist-vendored
+course_archive/**/*.pdf linguist-vendored

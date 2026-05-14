@@ -13,6 +13,7 @@ Or directly::
     # Optional: override chips declaration
     python -m digilab.synthesizer --expr <expr.md> --out <out_dir> --chips "7400 x 2, 7420 x 1"
 """
+
 from __future__ import annotations
 
 import argparse
@@ -22,9 +23,15 @@ from pathlib import Path
 from typing import Dict, List, Tuple
 
 from .chips.registry import get_spec
-from .common.ast_nodes import Assignment, Const, Nand, Node, Primitive, Program, Var
-from .common.netlist import ChipInstance, Connection, Endpoint, Netlist, _endpoint_sort_key  # type: ignore[attr-defined]
-from .common.parser import parse_program_file, _parse_chips_decl  # type: ignore[attr-defined]
+from .common.ast_nodes import Const, Nand, Node, Primitive, Program, Var
+from .common.netlist import (
+    ChipInstance,
+    Connection,
+    Endpoint,
+    Netlist,
+    _endpoint_sort_key,
+)
+from .common.parser import _parse_chips_decl, parse_program_file
 
 
 class SynthError(RuntimeError):
@@ -32,6 +39,7 @@ class SynthError(RuntimeError):
 
 
 # ---------- 芯片实例池 ----------
+
 
 class _ChipPool:
     """根据 chips 声明开出实例，按 arity / primitive 分配资源。
@@ -181,17 +189,11 @@ def _emit_primitive(
     # 默认使能：芯片引脚 → VCC.0 / GND.0
     for pin_n, rail in block.default_enables:
         if rail == "VCC":
-            netlist.add_connection(
-                Endpoint(chip=chip_name, pin=pin_n), Endpoint(chip="VCC", pin=0)
-            )
+            netlist.add_connection(Endpoint(chip=chip_name, pin=pin_n), Endpoint(chip="VCC", pin=0))
         elif rail == "GND":
-            netlist.add_connection(
-                Endpoint(chip=chip_name, pin=pin_n), Endpoint(chip="GND", pin=0)
-            )
+            netlist.add_connection(Endpoint(chip=chip_name, pin=pin_n), Endpoint(chip="GND", pin=0))
         else:
-            raise SynthError(
-                f"Block.default_enables 仅支持 'VCC' / 'GND'，得到 {rail!r}"
-            )
+            raise SynthError(f"Block.default_enables 仅支持 'VCC' / 'GND'，得到 {rail!r}")
 
     return [Endpoint(chip=chip_name, pin=out_pin) for out_pin in block.outputs]
 
@@ -233,8 +235,7 @@ def synthesize(prog: Program) -> Netlist:
             names = asgn.all_names
             if len(out_eps) != len(names):
                 raise SynthError(
-                    f"原语 {asgn.expr.name} 输出 {len(out_eps)} 路，"
-                    f"但 LHS 给出 {len(names)} 个名字"
+                    f"原语 {asgn.expr.name} 输出 {len(out_eps)} 路，但 LHS 给出 {len(names)} 个名字"
                 )
             for nm, ep in zip(names, out_eps):
                 var_endpoints[nm] = ep
@@ -243,9 +244,7 @@ def synthesize(prog: Program) -> Netlist:
         else:
             if asgn.extra_names:
                 # 解析阶段已拒绝；此处冗余防御
-                raise SynthError(
-                    f"赋值 {asgn.name!r} 的右侧不是多输出原语，但给出了多 LHS 名字"
-                )
+                raise SynthError(f"赋值 {asgn.name!r} 的右侧不是多输出原语，但给出了多 LHS 名字")
             out_ep = _emit_node(asgn.expr, var_endpoints, pool, netlist, cache)
             var_endpoints[asgn.name] = out_ep
             if asgn.name in output_set:
@@ -255,14 +254,11 @@ def synthesize(prog: Program) -> Netlist:
     for inst in netlist.chips:
         spec = get_spec(inst.type)
         for pn in spec.vcc_pins:
-            netlist.add_connection(Endpoint(chip=inst.name, pin=pn),
-                                   Endpoint(chip="VCC", pin=0))
+            netlist.add_connection(Endpoint(chip=inst.name, pin=pn), Endpoint(chip="VCC", pin=0))
         for pn in spec.gnd_pins:
-            netlist.add_connection(Endpoint(chip=inst.name, pin=pn),
-                                   Endpoint(chip="GND", pin=0))
+            netlist.add_connection(Endpoint(chip=inst.name, pin=pn), Endpoint(chip="GND", pin=0))
         for pn in spec.nc_pins:
-            netlist.add_connection(Endpoint(chip=inst.name, pin=pn),
-                                   Endpoint(chip="NC", pin=0))
+            netlist.add_connection(Endpoint(chip=inst.name, pin=pn), Endpoint(chip="NC", pin=0))
 
     _daisy_chain_connections(netlist)
     netlist.sort()
@@ -304,6 +300,7 @@ def _daisy_chain_connections(netlist: Netlist) -> None:
 
 
 # ---------- CLI ----------
+
 
 def main(argv: List[str] | None = None) -> int:
     ap = argparse.ArgumentParser(

@@ -18,6 +18,7 @@ Or directly::
 
     python -m digilab.verifier --netlist <netlist.json> --truth <truth_table.csv> --out <dir>
 """
+
 from __future__ import annotations
 
 import argparse
@@ -25,7 +26,7 @@ import json
 import sys
 from collections import defaultdict, deque
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, Set, Tuple
+from typing import Any, Callable, Dict, Iterator, List, Optional, Set, Tuple
 
 from .chips.registry import get_spec
 from .common.netlist import Endpoint, Netlist
@@ -37,6 +38,7 @@ class VerifyError(RuntimeError):
 
 
 # ---------- 信号合并：union-find ----------
+
 
 class _UnionFind:
     def __init__(self) -> None:
@@ -56,6 +58,7 @@ class _UnionFind:
 
 
 # ---------- 网表 → 门级图 ----------
+
 
 class _Circuit:
     """已编译的电路：信号节点 + 求值单元（unit）列表。
@@ -86,7 +89,14 @@ class _Circuit:
         # unit_record: (chip_name, kind, gate_or_block_id, input_signals[],
         #               output_signals[], func: List[int] -> List[int])
         self.units: List[
-            Tuple[str, str, int, List[Endpoint], List[Endpoint], Callable[[List[int]], List[int]]]
+            Tuple[
+                str,
+                str,
+                int,
+                List[Endpoint],
+                List[Endpoint],
+                Callable[[List[int]], List[int]],
+            ]
         ] = []
         for inst in netlist.chips:
             spec = get_spec(inst.type)
@@ -94,14 +104,19 @@ class _Circuit:
                 in_sigs = [self.uf.find(Endpoint(chip=inst.name, pin=pn)) for pn in g.inputs]
                 out_sigs = [self.uf.find(Endpoint(chip=inst.name, pin=g.output))]
                 self.units.append(
-                    (inst.name, "gate", g.gate_id, in_sigs, out_sigs, _wrap_gate_func(g.func))
+                    (
+                        inst.name,
+                        "gate",
+                        g.gate_id,
+                        in_sigs,
+                        out_sigs,
+                        _wrap_gate_func(g.func),
+                    )
                 )
             for b in spec.blocks:
                 in_sigs = [self.uf.find(Endpoint(chip=inst.name, pin=pn)) for pn in b.inputs]
                 out_sigs = [self.uf.find(Endpoint(chip=inst.name, pin=pn)) for pn in b.outputs]
-                self.units.append(
-                    (inst.name, "block", b.block_id, in_sigs, out_sigs, b.func)
-                )
+                self.units.append((inst.name, "block", b.block_id, in_sigs, out_sigs, b.func))
 
         # 4. INPUT / OUTPUT / VCC / GND 的代表节点
         self.input_signals: Dict[str, Endpoint] = {
@@ -137,7 +152,7 @@ class _Circuit:
         # 6. 拓扑排序 unit
         self.topo_order: List[int] = self._topo_sort()
 
-    def _all_endpoints(self):
+    def _all_endpoints(self) -> Iterator[Endpoint]:
         for c in self.netlist.connections:
             yield c.src
             yield c.dst
@@ -205,19 +220,24 @@ def _wrap_gate_func(
     func: Callable[[List[int]], int],
 ) -> Callable[[List[int]], List[int]]:
     """把单输出 Gate.func 适配成与 Block.func 同型的 List[int] -> List[int]。"""
+
     def wrapped(bits: List[int]) -> List[int]:
         return [func(bits)]
+
     return wrapped
 
 
 # ---------- 比对 ----------
 
-def verify(netlist: Netlist, header: List[str], rows: List[List[str]]) -> Tuple[List[List[str]], dict]:
+
+def verify(
+    netlist: Netlist, header: List[str], rows: List[List[str]]
+) -> Tuple[List[List[str]], Dict[str, Any]]:
     in_idx, out_idx = split_io(header, netlist.inputs, netlist.outputs)
     circuit = _Circuit(netlist)
 
     actual_rows: List[List[str]] = []
-    diffs: List[dict] = []
+    diffs: List[Dict[str, Any]] = []
     pass_count = 0
 
     for r_i, row in enumerate(rows):
@@ -234,21 +254,23 @@ def verify(netlist: Netlist, header: List[str], rows: List[List[str]]) -> Tuple[
             act_val = actual[name]
             actual_row[out_idx[k]] = str(act_val)
             if exp_str == "X":
-                continue   # 任意态，不参与比对
+                continue  # 任意态，不参与比对
             if str(act_val) != exp_str:
                 ok = False
-                diffs.append({
-                    "row": r_i + 2,   # CSV 含表头，行号从 2 开始
-                    "inputs": in_bits,
-                    "output": name,
-                    "expected": exp_str,
-                    "actual": act_val,
-                })
+                diffs.append(
+                    {
+                        "row": r_i + 2,  # CSV 含表头，行号从 2 开始
+                        "inputs": in_bits,
+                        "output": name,
+                        "expected": exp_str,
+                        "actual": act_val,
+                    }
+                )
         if ok:
             pass_count += 1
         actual_rows.append(actual_row)
 
-    report = {
+    report: Dict[str, Any] = {
         "total_rows": len(rows),
         "passed": pass_count,
         "failed": len(rows) - pass_count,
@@ -258,6 +280,7 @@ def verify(netlist: Netlist, header: List[str], rows: List[List[str]]) -> Tuple[
 
 
 # ---------- CLI ----------
+
 
 def main(argv: List[str] | None = None) -> int:
     ap = argparse.ArgumentParser(

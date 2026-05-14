@@ -2,6 +2,7 @@
 
 只验证 pipeline 能跑通，不落地到 实验x/。
 """
+
 from __future__ import annotations
 
 import json
@@ -20,6 +21,7 @@ ROOT = Path(__file__).resolve().parent.parent / "course_archive"
 
 
 # ---------------- 1. parser 单元测试 ----------------
+
 
 def test_parser_basic():
     text = """
@@ -67,6 +69,7 @@ F = NAND2(A, B, A)
 
 # ---------------- 2. synthesizer 单元测试 ----------------
 
+
 def test_synthesize_nand2(tmp_path):
     text = """
 chips: 7400 x 1
@@ -85,8 +88,10 @@ F = NAND2(A, B)
     assert data["outputs"] == ["F"]
     assert data["chips"] == [{"name": "7400_A", "type": "7400"}]
 
-    pairs = {(c["from"]["chip"], c["from"]["pin"], c["to"]["chip"], c["to"]["pin"])
-             for c in data["connections"]}
+    pairs = {
+        (c["from"]["chip"], c["from"]["pin"], c["to"]["chip"], c["to"]["pin"])
+        for c in data["connections"]
+    }
     # 必须包含的电源 / 地与门连线
     assert ("INPUT", "A", "7400_A", 1) in pairs
     assert ("INPUT", "B", "7400_A", 2) in pairs
@@ -112,6 +117,7 @@ F = NAND4(NAND2(A, B), NAND2(C, D), A, D)
 
 # ---------------- 3. circuit.txt 排序 ----------------
 
+
 def test_circuit_text_sorted(tmp_path):
     text = """
 chips: 7400 x 1
@@ -129,12 +135,13 @@ F = NAND2(A, B)
     assert lines[1].startswith("INPUT.B")
     # 后面是 7400_A 的引脚号升序
     rest = lines[2:]
-    chip_lines = [l for l in rest if l.startswith("7400_A")]
-    pins = [int(l.split(".")[1].split(" ")[0]) for l in chip_lines]
+    chip_lines = [ln for ln in rest if ln.startswith("7400_A")]
+    pins = [int(ln.split(".")[1].split(" ")[0]) for ln in chip_lines]
     assert pins == sorted(pins)
 
 
 # ---------------- 4. 端到端：synth → verify ----------------
+
 
 def test_e2e_nand_pipeline(tmp_path):
     expr_md = ROOT / "真值表与逻辑表达式" / "示例_表达式.md"
@@ -142,10 +149,14 @@ def test_e2e_nand_pipeline(tmp_path):
 
     out_dir = tmp_path / "smoke"
     # 1) synth
-    rc = synthesizer.main([
-        "--expr", str(expr_md),
-        "--out", str(out_dir),
-    ])
+    rc = synthesizer.main(
+        [
+            "--expr",
+            str(expr_md),
+            "--out",
+            str(out_dir),
+        ]
+    )
     assert rc == 0
     netlist = Netlist.load(out_dir / "netlist.json")
     assert "F" in netlist.outputs
@@ -155,11 +166,16 @@ def test_e2e_nand_pipeline(tmp_path):
     md_file_to_csv(truth_md, truth_csv)
 
     # 3) verify
-    rc = verifier.main([
-        "--netlist", str(out_dir / "netlist.json"),
-        "--truth", str(truth_csv),
-        "--out", str(out_dir),
-    ])
+    rc = verifier.main(
+        [
+            "--netlist",
+            str(out_dir / "netlist.json"),
+            "--truth",
+            str(truth_csv),
+            "--out",
+            str(out_dir),
+        ]
+    )
     assert rc == 0
 
     rep = json.loads((out_dir / "verify_report.json").read_text(encoding="utf-8"))
@@ -168,6 +184,7 @@ def test_e2e_nand_pipeline(tmp_path):
 
 
 # ---------------- 5. verifier 检测错误网表 ----------------
+
 
 def test_verifier_detects_wrong_wiring(tmp_path):
     """手工把 INPUT.B 接到 GND，制造错误，verifier 应该能检测出来。"""
@@ -197,17 +214,23 @@ F = NAND2(A, B)
     truth_csv = out_dir / "truth_table.csv"
     md_file_to_csv(truth_md, truth_csv)
 
-    rc = verifier.main([
-        "--netlist", str(out_dir / "netlist.json"),
-        "--truth", str(truth_csv),
-        "--out", str(out_dir),
-    ])
+    rc = verifier.main(
+        [
+            "--netlist",
+            str(out_dir / "netlist.json"),
+            "--truth",
+            str(truth_csv),
+            "--out",
+            str(out_dir),
+        ]
+    )
     assert rc != 0
     rep = json.loads((out_dir / "verify_report.json").read_text(encoding="utf-8"))
     assert rep["failed"] > 0
 
 
 # ---------------- 6. tt_io 单元测试 ----------------
+
 
 def test_tt_io_md_to_csv(tmp_path):
     md = """
@@ -227,6 +250,7 @@ def test_tt_io_md_to_csv(tmp_path):
 
 
 # ---------------- 7. 字面量 0/1 ----------------
+
 
 def test_literal_one_to_vcc(tmp_path):
     """NAND4 的第 4 输入写 1 时：旧行为是接 VCC，新行为（VCC 输入替换）是
@@ -251,6 +275,7 @@ F = NAND4(A, B, C, 1)
     )
 
     from collections import defaultdict, deque
+
     adj = defaultdict(list)
     for c in netlist.connections:
         if c.dst.chip in ("VCC", "GND", "NC"):
@@ -299,7 +324,8 @@ F = NAND4(1, 1, 1, 1)
     netlist = synthesizer.synthesize(prog)
 
     vcc_to_nand4_input = [
-        c for c in netlist.connections
+        c
+        for c in netlist.connections
         if c.src == Endpoint("VCC", 0) and c.dst.chip == "7420_A" and c.dst.pin in (1, 2, 4, 5)
     ]
     assert len(vcc_to_nand4_input) >= 1, (
@@ -308,6 +334,7 @@ F = NAND4(1, 1, 1, 1)
 
 
 # ---------------- 8. 自动 CSE ----------------
+
 
 def test_auto_cse_reuses_gate(tmp_path):
     """NAND2(NAND2(B,B), NAND2(B,B)) 应该只生成 2 个 NAND2 门。"""
@@ -328,8 +355,7 @@ F = NAND2(NAND2(B, B), NAND2(B, B))
     for c in netlist.connections:
         endpoints.add((c.src.chip, c.src.pin))
         endpoints.add((c.dst.chip, c.dst.pin))
-    nand2_outputs = {ep for ep in endpoints
-                     if ep[0] == "7400_A" and ep[1] in (3, 6, 8, 11)}
+    nand2_outputs = {ep for ep in endpoints if ep[0] == "7400_A" and ep[1] in (3, 6, 8, 11)}
     # 顶层 NAND2 + 共享子 NAND2 = 2 个门 = 2 种输出引脚
     assert len(nand2_outputs) == 2, (
         f"CSE 失效：期望占用 2 个 NAND2 门，实际 {len(nand2_outputs)} 个：{nand2_outputs}"
@@ -356,6 +382,7 @@ Y = NAND2(
 
 # ---------------- 8.5 菊花链扇出 ----------------
 
+
 def test_daisy_chain_fanout(tmp_path):
     """A 经 CSE 后扇出 3 处（NAND2(A,A) 的两个输入 + NAND2(A,B) 的一个输入），
     应被重组为菊花链：INPUT.A -> 第一消费者 -> 第二消费者 -> 第三消费者，
@@ -371,8 +398,6 @@ F = NAND2(NAND2(A, A), NAND2(A, B))
     netlist = synthesizer.synthesize(prog)
 
     a_consumers = [c for c in netlist.connections if c.src.chip == "INPUT" and c.src.pin == "A"]
-    a_dst_endpoints = {c for c in netlist.connections
-                       if c.dst.chip != "VCC" and c.dst.chip != "GND" and c.dst.chip != "NC"}
 
     # 1) INPUT.A 作 src 的连线只剩 1 条（其余都被链化挪到中间链上了）
     assert len(a_consumers) == 1, (
@@ -383,6 +408,7 @@ F = NAND2(NAND2(A, A), NAND2(A, B))
     # 2) 链路连通性：从 INPUT.A 出发，能沿连线走到所有 3 个 A 消费者
     #    构造邻接表（src -> [dst...]）后做 BFS
     from collections import defaultdict, deque
+
     adj = defaultdict(list)
     for c in netlist.connections:
         if c.dst.chip in ("VCC", "GND", "NC"):
@@ -401,15 +427,14 @@ F = NAND2(NAND2(A, A), NAND2(A, B))
 
     # 应能到达 3 个 NAND2 输入引脚（属于 7400_A.{1,2,4,5,9,10,12,13}）
     nand2_input_pins = {1, 2, 4, 5, 9, 10, 12, 13}
-    a_consumer_pins = {n for n in reachable
-                       if n[0] == "7400_A" and n[1] in nand2_input_pins}
+    a_consumer_pins = {n for n in reachable if n[0] == "7400_A" and n[1] in nand2_input_pins}
     assert len(a_consumer_pins) == 3, (
-        f"菊花链应连通 3 个 A 的消费者引脚，实际连通 {len(a_consumer_pins)} 个："
-        f"{a_consumer_pins}"
+        f"菊花链应连通 3 个 A 的消费者引脚，实际连通 {len(a_consumer_pins)} 个：{a_consumer_pins}"
     )
 
 
 # ---------------- 9. 中间变量语法 ----------------
+
 
 def test_intermediate_var(tmp_path):
     """T1 = NAND2(A, A) 然后 Y = NAND2(T1, B)：T1 不是 outputs，但能被引用。"""
@@ -426,7 +451,6 @@ Y = NAND2(T1, B)
     assert [a.name for a in prog.assignments] == ["T1", "Y"]
 
     netlist = synthesizer.synthesize(prog)
-    pairs = {(c.src.chip, c.src.pin, c.dst.chip, c.dst.pin) for c in netlist.connections}
     # 应该只有 Y 出现在 OUTPUT 端，不应该有 T1
     out_pins = {c.dst.pin for c in netlist.connections if c.dst.chip == "OUTPUT"}
     assert out_pins == {"Y"}
@@ -461,6 +485,7 @@ T1 = NAND2(A, A)
 
 # ---------------- 10. 中间变量 + CSE 端到端验证 ----------------
 
+
 def test_intermediate_var_e2e_verify(tmp_path):
     """中间变量定义的电路在 verifier 下应正确求值。"""
     text = """
@@ -490,11 +515,16 @@ F = NAND2(T1, B)
     truth_csv = out_dir / "truth_table.csv"
     md_file_to_csv(truth_md_path, truth_csv)
 
-    rc = verifier.main([
-        "--netlist", str(out_dir / "netlist.json"),
-        "--truth", str(truth_csv),
-        "--out", str(out_dir),
-    ])
+    rc = verifier.main(
+        [
+            "--netlist",
+            str(out_dir / "netlist.json"),
+            "--truth",
+            str(truth_csv),
+            "--out",
+            str(out_dir),
+        ]
+    )
     assert rc == 0
     rep = json.loads((out_dir / "verify_report.json").read_text(encoding="utf-8"))
     assert rep["failed"] == 0
@@ -608,9 +638,9 @@ Y0, Y1, Y2, Y3, Y4, Y5, Y6, Y7 = DECODE3(C, B, A)
     for out_pin, name in zip(block.outputs, ["Y0", "Y1", "Y2", "Y3", "Y4", "Y5", "Y6", "Y7"]):
         # 出于菊花链的可能，src 不一定是 chip_pin → OUTPUT，但路径上必有连接，
         # 此处只校验 OUTPUT.<name> 能在某条连线的 dst 出现
-        assert any(
-            c.dst == Endpoint(chip="OUTPUT", pin=name) for c in netlist.connections
-        ), f"输出 {name} 缺少连线"
+        assert any(c.dst == Endpoint(chip="OUTPUT", pin=name) for c in netlist.connections), (
+            f"输出 {name} 缺少连线"
+        )
 
 
 def test_decode3_e2e_verify(tmp_path):
@@ -645,11 +675,16 @@ Y0, Y1, Y2, Y3, Y4, Y5, Y6, Y7 = DECODE3(C, B, A)
     truth_csv = out_dir / "truth_table.csv"
     md_file_to_csv(truth_md_path, truth_csv)
 
-    rc = verifier.main([
-        "--netlist", str(out_dir / "netlist.json"),
-        "--truth", str(truth_csv),
-        "--out", str(out_dir),
-    ])
+    rc = verifier.main(
+        [
+            "--netlist",
+            str(out_dir / "netlist.json"),
+            "--truth",
+            str(truth_csv),
+            "--out",
+            str(out_dir),
+        ]
+    )
     assert rc == 0
     rep = json.loads((out_dir / "verify_report.json").read_text(encoding="utf-8"))
     assert rep["failed"] == 0
@@ -689,6 +724,7 @@ def test_register_lookup_74138():
 
 
 # ---------------- 12. 74153（MUX4）+ 混用 ----------------
+
 
 def test_chip_74153_self_check():
     """74153 代表性 8 行：4 个 select × 使能 on/off。"""
@@ -773,11 +809,16 @@ M = MUX4(B, A, C0, C1, C2, C3)
     truth_csv = out_dir / "truth_table.csv"
     md_file_to_csv(truth_md_path, truth_csv)
 
-    rc = verifier.main([
-        "--netlist", str(out_dir / "netlist.json"),
-        "--truth", str(truth_csv),
-        "--out", str(out_dir),
-    ])
+    rc = verifier.main(
+        [
+            "--netlist",
+            str(out_dir / "netlist.json"),
+            "--truth",
+            str(truth_csv),
+            "--out",
+            str(out_dir),
+        ]
+    )
     assert rc == 0
     rep = json.loads((out_dir / "verify_report.json").read_text(encoding="utf-8"))
     assert rep["failed"] == 0
@@ -828,11 +869,16 @@ F = NAND2(M, M)
     truth_csv = out_dir / "truth_table.csv"
     md_file_to_csv(truth_md_path, truth_csv)
 
-    rc = verifier.main([
-        "--netlist", str(out_dir / "netlist.json"),
-        "--truth", str(truth_csv),
-        "--out", str(out_dir),
-    ])
+    rc = verifier.main(
+        [
+            "--netlist",
+            str(out_dir / "netlist.json"),
+            "--truth",
+            str(truth_csv),
+            "--out",
+            str(out_dir),
+        ]
+    )
     assert rc == 0
     rep = json.loads((out_dir / "verify_report.json").read_text(encoding="utf-8"))
     assert rep["failed"] == 0
@@ -855,6 +901,7 @@ F = NAND2(MUX4(B, A, C0, C1, C2, C3), B)
 
 # ---------------- 13. 74151（MUX8，双输出）----------------
 
+
 def test_chip_74151_self_check():
     """74151 自检：8 个 sel × 使能 on/off，Y/Ȳ 互补。"""
     data = [0, 1, 0, 1, 1, 0, 1, 0]
@@ -864,7 +911,7 @@ def test_chip_74151_self_check():
         c = (sel >> 2) & 1
         on = chip_74151.mux8([c, b, a] + data + [0])
         exp = data[sel]
-        assert on == [exp, 1 - exp], f"enable=0 sel={sel} expected=[{exp},{1-exp}] got={on}"
+        assert on == [exp, 1 - exp], f"enable=0 sel={sel} expected=[{exp},{1 - exp}] got={on}"
         off = chip_74151.mux8([c, b, a] + data + [1])
         assert off == [0, 1], f"enable=1 sel={sel} expected=[0,1] got={off}"
 
@@ -1010,11 +1057,16 @@ Y, YBAR = MUX8(C, B, A, D0, D1, D2, D3, D4, D5, D6, D7)
     truth_csv = out_dir / "truth_table.csv"
     md_file_to_csv(truth_md_path, truth_csv)
 
-    rc = verifier.main([
-        "--netlist", str(out_dir / "netlist.json"),
-        "--truth", str(truth_csv),
-        "--out", str(out_dir),
-    ])
+    rc = verifier.main(
+        [
+            "--netlist",
+            str(out_dir / "netlist.json"),
+            "--truth",
+            str(truth_csv),
+            "--out",
+            str(out_dir),
+        ]
+    )
     assert rc == 0
     rep = json.loads((out_dir / "verify_report.json").read_text(encoding="utf-8"))
     assert rep["failed"] == 0
@@ -1060,11 +1112,16 @@ F, F_BAR = MUX8(A1, A0, B1, 1, 1, B0, B0, 0, 1, 0, B0)
     truth_csv = out_dir / "truth_table.csv"
     md_file_to_csv(truth_md_path, truth_csv)
 
-    rc = verifier.main([
-        "--netlist", str(out_dir / "netlist.json"),
-        "--truth", str(truth_csv),
-        "--out", str(out_dir),
-    ])
+    rc = verifier.main(
+        [
+            "--netlist",
+            str(out_dir / "netlist.json"),
+            "--truth",
+            str(truth_csv),
+            "--out",
+            str(out_dir),
+        ]
+    )
     assert rc == 0
     rep = json.loads((out_dir / "verify_report.json").read_text(encoding="utf-8"))
     assert rep["failed"] == 0

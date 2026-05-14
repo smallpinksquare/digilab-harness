@@ -14,10 +14,11 @@
   - 同芯片内引脚号升序
   - 端点为 INPUT/OUTPUT/VCC/GND/NC 时排在最前（按 ASCII：GND<INPUT<NC<OUTPUT<VCC）
 """
+
 from __future__ import annotations
 
 import json
-from dataclasses import asdict, dataclass, field
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Tuple, Union
 
@@ -53,14 +54,13 @@ class Connection:
 
     @staticmethod
     def from_dict(d: Dict[str, Any]) -> "Connection":
-        return Connection(src=Endpoint.from_dict(d["from"]),
-                          dst=Endpoint.from_dict(d["to"]))
+        return Connection(src=Endpoint.from_dict(d["from"]), dst=Endpoint.from_dict(d["to"]))
 
 
 @dataclass
 class ChipInstance:
-    name: str        # e.g. "7400_A"
-    type: str        # e.g. "7400"
+    name: str  # e.g. "7400_A"
+    type: str  # e.g. "7400"
 
     def to_dict(self) -> Dict[str, str]:
         return {"name": self.name, "type": self.type}
@@ -79,7 +79,9 @@ def _endpoint_sort_key(ep: Endpoint) -> Tuple[int, str, int, str]:
     return (is_normal, ep.chip, pin_num, pin_str)
 
 
-def _connection_sort_key(c: Connection) -> Tuple:
+def _connection_sort_key(
+    c: Connection,
+) -> Tuple[Tuple[int, str, int, str], Tuple[int, str, int, str]]:
     return (_endpoint_sort_key(c.src), _endpoint_sort_key(c.dst))
 
 
