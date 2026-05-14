@@ -1,13 +1,17 @@
-"""程序1：综合器。
+"""Circuit synthesizer: expression file → circuit.txt + netlist.json.
 
-输入：表达式文件（含 chips 声明、inputs、outputs、若干赋值）
-处理：表达式 → AST → 把每个 NAND2/NAND4 节点映射到 chips 声明里的一个未占用门
-       → 写引脚连线
-输出：circuit.txt + netlist.json（按 harness 附录 B.4 排序，含 VCC/GND/NC）
+Input:  expression file (chips declaration, inputs, outputs, assignments)
+Output: circuit.txt + netlist.json (sorted per harness spec, incl. VCC/GND/NC)
 
-CLI：
-    python synthesizer.py --expr <expr.md> --out <dir>
-    可选 --chips "7400 x 2, 7420 x 1" 覆盖文件中的声明
+CLI (via the ``digilab`` package entry-point, preferred)::
+
+    digilab synth --expr <expr.md> --out <out_dir>
+
+Or directly::
+
+    python -m digilab.synthesizer --expr <expr.md> --out <out_dir>
+    # Optional: override chips declaration
+    python -m digilab.synthesizer --expr <expr.md> --out <out_dir> --chips "7400 x 2, 7420 x 1"
 """
 from __future__ import annotations
 

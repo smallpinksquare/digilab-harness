@@ -1,17 +1,22 @@
-"""程序2：验证器。
+"""Circuit verifier: netlist + expected truth table → verify report.
 
-输入：netlist.json + truth_table.csv
-处理：
-  1. 解析网表，把每条连线视为信号节点的"等价类"（电气并接）
-  2. 把信号 = (chip, pin) 抽象为门级图：门的输出信号 → 门的输入信号
-  3. 对每组输入组合，按拓扑顺序求每个门的输出
-  4. 与期望真值表逐行比对
-输出：actual_truth_table.csv + verify_report.json（含 diff 行号、错误位置）
+Inputs:  netlist.json + truth_table.csv
+Process:
+  1. Parse netlist; treat each connection as an electrical equivalence class.
+  2. Abstract signals (chip, pin) into a gate-level graph.
+  3. For each input combination, evaluate gates in topological order.
+  4. Compare against expected truth table row by row.
+Outputs: actual_truth_table.csv + verify_report.json (diff rows + error locations)
 
-可独立于 synthesizer 运行，仅依赖 netlist.json。
+Runs independently from the synthesizer; only depends on netlist.json.
 
-CLI：
-    python verifier.py --netlist <netlist.json> --truth <truth_table.csv> --out <dir>
+CLI (via ``digilab`` entry-point, preferred)::
+
+    digilab verify --netlist <netlist.json> --truth <truth_table.csv> --out <dir>
+
+Or directly::
+
+    python -m digilab.verifier --netlist <netlist.json> --truth <truth_table.csv> --out <dir>
 """
 from __future__ import annotations
 
@@ -263,10 +268,13 @@ def main(argv: List[str] | None = None) -> int:
     ap.add_argument("--out", required=True, type=Path, help="输出目录")
     args = ap.parse_args(argv)
 
-    netlist = Netlist.load(args.netlist)
-    header, rows = read_csv(args.truth)
-
-    actual_rows, report = verify(netlist, header, rows)
+    try:
+        netlist = Netlist.load(args.netlist)
+        header, rows = read_csv(args.truth)
+        actual_rows, report = verify(netlist, header, rows)
+    except Exception as exc:  # noqa: BLE001
+        print(f"错误: {exc}", file=sys.stderr)
+        return 1
 
     args.out.mkdir(parents=True, exist_ok=True)
     actual_path = args.out / "actual_truth_table.csv"
