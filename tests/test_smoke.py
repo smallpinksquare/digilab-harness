@@ -5,19 +5,18 @@
 from __future__ import annotations
 
 import json
-import sys
 from pathlib import Path
 
 import pytest
 
-ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT))
+from digilab import synthesizer, verifier
+from digilab.common.netlist import Endpoint, Netlist
+from digilab.common.parser import parse_program_text
+from digilab.common.tt_io import md_file_to_csv
 
-import synthesizer
-import verifier
-from common.netlist import Endpoint, Netlist
-from common.parser import parse_program_text
-from common.tt_io import md_file_to_csv
+# Fixture files live in course_archive/. Phase C will move a curated subset
+# into examples/; until then the smoke suite reuses them as-is.
+ROOT = Path(__file__).resolve().parent.parent / "course_archive"
 
 
 # ---------------- 1. parser 单元测试 ----------------
@@ -504,9 +503,9 @@ F = NAND2(T1, B)
 
 # ---------------- 11. 74138（DECODE3）------------------
 
-from chips import chip_74138, chip_74151, chip_74153  # noqa: E402
-from chips.registry import get_spec  # noqa: E402
-from common.ast_nodes import Primitive  # noqa: E402
+from digilab.chips import chip_74138, chip_74151, chip_74153  # noqa: E402
+from digilab.chips.registry import get_spec  # noqa: E402
+from digilab.common.ast_nodes import Primitive  # noqa: E402
 
 
 def test_chip_74138_self_check():

@@ -314,11 +314,15 @@ def main(argv: List[str] | None = None) -> int:
     )
     args = ap.parse_args(argv)
 
-    prog = parse_program_file(args.expr)
-    if args.chips.strip():
-        prog.chips_decl = _parse_chips_decl(args.chips)
+    try:
+        prog = parse_program_file(args.expr)
+        if args.chips.strip():
+            prog.chips_decl = _parse_chips_decl(args.chips)
+        netlist = synthesize(prog)
+    except Exception as exc:  # noqa: BLE001
+        print(f"错误: {exc}", file=sys.stderr)
+        return 1
 
-    netlist = synthesize(prog)
     nj, ct = netlist.save(args.out)
     print(f"写入 {nj}")
     print(f"写入 {ct}")
