@@ -124,6 +124,45 @@ and the corresponding chip pin is left floating in `circuit.txt`.
 
 ---
 
+## Truth table format
+
+The verifier (`digilab verify --truth`) accepts either a **Markdown table** (`.md`)
+or a **CSV file** (`.csv`).  When a `.md` file is given the parser converts it
+to CSV automatically.
+
+### Markdown table
+
+```markdown
+| A | B | F |
+|---|---|---|
+| 0 | 0 | 1 |
+| 0 | 1 | 1 |
+| 1 | 0 | 1 |
+| 1 | 1 | 0 |
+```
+
+Rules:
+- **First row** is the header.  Column names must exactly match the `inputs:` and
+  `outputs:` names declared in the expression file.
+- Column order: inputs first, then outputs (any order is accepted as long as the
+  header names match).
+- Allowed cell values: `0`, `1`, `X` / `x` / `-` (don't-care — treated as `X`).
+- The separator row (`| --- |`) is ignored automatically.
+
+### CSV file
+
+```
+A,B,F
+0,0,1
+0,1,1
+1,0,1
+1,1,0
+```
+
+Same rules apply; the first row is the header.
+
+---
+
 ## Constraints
 
 | Constraint | Enforced by |
