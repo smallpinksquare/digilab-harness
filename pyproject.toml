@@ -57,9 +57,9 @@ digilab = "digilab.cli:main"
 
 # URLs are placeholders until the GitHub repository is published.
 [project.urls]
-Homepage = "https://github.com/digilab-harness/digilab"
-Source = "https://github.com/digilab-harness/digilab"
-Issues = "https://github.com/digilab-harness/digilab/issues"
+Homepage = "https://github.com/smallpinksquare/digilab-harness"
+Source = "https://github.com/smallpinksquare/digilab-harness"
+Issues = "https://github.com/smallpinksquare/digilab-harness/issues"
 
 # --- hatchling build configuration ---
 [tool.hatch.build.targets.wheel]

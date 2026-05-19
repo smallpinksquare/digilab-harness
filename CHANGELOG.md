@@ -40,4 +40,4 @@ See [`src/digilab/chips/CHANGELOG.md`](src/digilab/chips/CHANGELOG.md) for the
 detailed history of individual chip additions (74138, 74153, 74151) prior to this
 open-source release.
 
-[0.1.0]: https://github.com/digilab-harness/digilab/releases/tag/v0.1.0
+[0.1.0]: https://github.com/smallpinksquare/digilab-harness/releases/tag/v0.1.0

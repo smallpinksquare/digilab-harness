@@ -1,6 +1,6 @@
 # digilab
 
-[![CI](https://github.com/digilab-harness/digilab/actions/workflows/ci.yml/badge.svg)](https://github.com/digilab-harness/digilab/actions/workflows/ci.yml)
+[![CI](https://github.com/smallpinksquare/digilab-harness/actions/workflows/ci.yml/badge.svg)](https://github.com/smallpinksquare/digilab-harness/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.9%20%7C%203.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue)](pyproject.toml)
 
@@ -15,7 +15,7 @@ breadboard-friendly wiring instructions (`circuit.txt`).
 ## Quick start
 
 ```bash
-git clone https://github.com/digilab-harness/digilab digilab-harness
+git clone https://github.com/smallpinksquare/digilab-harness digilab-harness
 cd digilab-harness
 pip install -e ".[dev]"   # Python ≥ 3.9 required
 ```

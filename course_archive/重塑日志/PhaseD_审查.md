@@ -50,7 +50,7 @@ Phase D 已完成 v0.1.0 全量发布准备。CHANGELOG 填写完整，55 项测
 
 ## 4. 遗留说明
 
-- `pyproject.toml` 中的 GitHub URLs（`https://github.com/digilab-harness/digilab`）是占位符，正式 push 前无需更改，待 GitHub 仓库创建后生效。
+- `pyproject.toml` 中的 GitHub URLs（`https://github.com/smallpinksquare/digilab-harness`）是占位符，正式 push 前无需更改，待 GitHub 仓库创建后生效。
 - `course_archive/` 已通过 `.gitattributes` 标记为 `linguist-vendored`，不影响 GitHub 语言统计。
 - Python 3.13 已加入 CI matrix（`ci.yml`）。
 
@@ -68,4 +68,4 @@ git push origin main --tags
 ```
 
 > 仓库推送前请先在 GitHub 创建 `digilab-harness/digilab` 仓库，并配置 remote：  
-> `git remote add origin https://github.com/digilab-harness/digilab.git`
+> `git remote add origin https://github.com/smallpinksquare/digilab-harness.git`
