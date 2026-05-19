@@ -1,7 +1,7 @@
 # digilab
 
 [![CI](https://github.com/digilab-harness/digilab/actions/workflows/ci.yml/badge.svg)](https://github.com/digilab-harness/digilab/actions/workflows/ci.yml)
-[![License: BSD-3-Clause](https://img.shields.io/badge/license-BSD--3--Clause-blue.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.9%20%7C%203.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue)](pyproject.toml)
 
 **digilab** synthesises NAND-based combinational logic circuits from a short
@@ -113,4 +113,4 @@ Course-specific materials (experiments, truth tables, wiring guides) are in
 
 ## License
 
-[BSD 3-Clause](LICENSE) © 2026 digilab contributors
+[MIT](LICENSE) © 2026 digilab contributors

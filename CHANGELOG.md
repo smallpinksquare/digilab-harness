@@ -30,7 +30,7 @@ open-source layout; no functional changes to the synthesiser or verifier.
 - **Quality** — Ruff lint + format, mypy strict, pytest + coverage configured in
   `pyproject.toml`; `py.typed` marker.
 - **CI** — GitHub Actions on Ubuntu and Windows, Python 3.9 / 3.10 / 3.11 / 3.12 / 3.13.
-- **Governance** — BSD-3-Clause `LICENSE`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`,
+- **Governance** — MIT `LICENSE`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`,
   `SECURITY.md`, GitHub issue/PR templates, `.editorconfig`, `.gitattributes`
   (`course_archive/` marked `linguist-vendored`).
 

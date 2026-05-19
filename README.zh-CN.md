@@ -1,7 +1,7 @@
 # digilab
 
 [![CI](https://github.com/digilab-harness/digilab/actions/workflows/ci.yml/badge.svg)](https://github.com/digilab-harness/digilab/actions/workflows/ci.yml)
-[![License: BSD-3-Clause](https://img.shields.io/badge/license-BSD--3--Clause-blue.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.9%20%7C%203.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue)](pyproject.toml)
 
 **digilab** 是一个 Python 库，能够将 NAND 门组合逻辑电路的简洁 DSL 表达式综合为面包板接线图（`circuit.txt` + `netlist.json`），并通过真值表自动验证电路正确性。
@@ -97,4 +97,4 @@ pytest
 
 ## 许可证
 
-[BSD 3-Clause](LICENSE) © 2026 digilab contributors
+[MIT](LICENSE) © 2026 digilab contributors
