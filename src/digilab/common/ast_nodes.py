@@ -15,7 +15,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import List, Tuple, Union
+from typing import Union
 
 
 @dataclass(frozen=True)
@@ -40,7 +40,7 @@ class Const:
 
 @dataclass(frozen=True)
 class Nand:
-    args: Tuple["Node", ...]
+    args: tuple[Node, ...]
 
     @property
     def arity(self) -> int:
@@ -59,7 +59,7 @@ class Primitive:
     """
 
     name: str
-    args: Tuple["Node", ...]
+    args: tuple[Node, ...]
 
     @property
     def arity(self) -> int:
@@ -85,10 +85,10 @@ class Assignment:
 
     name: str
     expr: Node
-    extra_names: List[str] = field(default_factory=list)
+    extra_names: list[str] = field(default_factory=list)
 
     @property
-    def all_names(self) -> List[str]:
+    def all_names(self) -> list[str]:
         return [self.name, *self.extra_names]
 
 
@@ -96,7 +96,7 @@ class Assignment:
 class Program:
     """整份表达式文件解析后的结果。"""
 
-    chips_decl: List[Tuple[str, int]] = field(default_factory=list)  # [(model, count), ...]
-    inputs: List[str] = field(default_factory=list)
-    outputs: List[str] = field(default_factory=list)
-    assignments: List[Assignment] = field(default_factory=list)
+    chips_decl: list[tuple[str, int]] = field(default_factory=list)  # [(model, count), ...]
+    inputs: list[str] = field(default_factory=list)
+    outputs: list[str] = field(default_factory=list)
+    assignments: list[Assignment] = field(default_factory=list)

@@ -20,7 +20,6 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
-from typing import List, Set, Tuple
 
 from .ast_nodes import Assignment, Const, Nand, Node, Primitive, Program, Var
 
@@ -54,7 +53,7 @@ _HEADER_LINE_RE = re.compile(r"^\s*(chips|inputs|outputs)\s*:", re.IGNORECASE)
 _ASSIGN_LINE_RE = re.compile(r"^\s*[A-Za-z_]\w*(\s*,\s*[A-Za-z_]\w*)*\s*=")
 
 
-def _preprocess(text: str) -> List[str]:
+def _preprocess(text: str) -> list[str]:
     """挑出 md 文件中真正的"语义行"，并把多行表达式合并为一行。
 
     规则：
@@ -63,7 +62,7 @@ def _preprocess(text: str) -> List[str]:
         其余（标题、引用、说明文字等）一律忽略
       - 当一行的左右括号未配对时，自动把后续行接入，直到括号平衡
     """
-    out: List[str] = []
+    out: list[str] = []
     in_fence = False
     pending: str = ""
 
@@ -105,8 +104,8 @@ def _preprocess(text: str) -> List[str]:
 _TOKEN_RE = re.compile(r"\s*(?:(\d+)|([A-Za-z_]\w*)|([(),])|(.))")
 
 
-def _tokenize(s: str) -> List[str]:
-    tokens: List[str] = []
+def _tokenize(s: str) -> list[str]:
+    tokens: list[str] = []
     i = 0
     while i < len(s):
         m = _TOKEN_RE.match(s, i)
@@ -126,7 +125,7 @@ def _tokenize(s: str) -> List[str]:
 
 
 class _Parser:
-    def __init__(self, tokens: List[str]) -> None:
+    def __init__(self, tokens: list[str]) -> None:
         self.tokens = tokens
         self.pos = 0
 
@@ -195,8 +194,8 @@ def _parse_expr_text(text: str) -> Node:
 # ---------- 头部声明 ----------
 
 
-def _parse_chips_decl(value: str) -> List[Tuple[str, int]]:
-    out: List[Tuple[str, int]] = []
+def _parse_chips_decl(value: str) -> list[tuple[str, int]]:
+    out: list[tuple[str, int]] = []
     for item in value.split(","):
         item = item.strip()
         if not item:
@@ -208,7 +207,7 @@ def _parse_chips_decl(value: str) -> List[Tuple[str, int]]:
     return out
 
 
-def _parse_id_list(value: str) -> List[str]:
+def _parse_id_list(value: str) -> list[str]:
     return [v.strip() for v in value.split(",") if v.strip()]
 
 
@@ -281,7 +280,7 @@ def parse_program_text(text: str) -> Program:
         raise ParseError("缺少 chips 声明")
 
     # 收集全部 LHS 名字（包含多输出每一路）
-    declared_lhs: List[str] = []
+    declared_lhs: list[str] = []
     for a in prog.assignments:
         declared_lhs.extend(a.all_names)
     declared_set = set(declared_lhs)
@@ -318,13 +317,13 @@ def parse_program_text(text: str) -> Program:
     return prog
 
 
-def _collect_var_refs(node: Node) -> Set[str]:
+def _collect_var_refs(node: Node) -> set[str]:
     if isinstance(node, Var):
         return {node.name}
     if isinstance(node, Const):
         return set()
     if isinstance(node, (Nand, Primitive)):
-        out: Set[str] = set()
+        out: set[str] = set()
         for a in node.args:
             out |= _collect_var_refs(a)
         return out

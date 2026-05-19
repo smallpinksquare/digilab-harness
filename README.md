@@ -15,12 +15,12 @@ breadboard-friendly wiring instructions (`circuit.txt`).
 ## Quick start
 
 ```bash
-git clone https://github.com/digilab-harness/digilab
+git clone https://github.com/digilab-harness/digilab digilab-harness
 cd digilab-harness
-pip install -e ".[dev]"
+pip install -e ".[dev]"   # Python ≥ 3.9 required
 ```
 
-Write a small expression file:
+Write a small expression file (`expr.md`):
 
 ```txt
 chips:   7400 x 1
@@ -30,14 +30,21 @@ outputs: F
 F = NAND2(A, B)
 ```
 
-Synthesise and verify:
+Copy the expected truth table from `examples/01_basic_nand2/truth_table.md`
+(or write your own), then synthesise and verify:
 
 ```bash
-digilab synth  --expr expr.md --out /tmp/ex
+# Synthesise — produces netlist.json + circuit.txt
+digilab synth --expr examples/01_basic_nand2/expr.md --out /tmp/ex
+
+# truth_table.md → CSV  (the verifier reads CSV)
 digilab verify --netlist /tmp/ex/netlist.json \
-               --truth   /tmp/ex/truth_table.csv \
+               --truth   examples/01_basic_nand2/truth_table.md \
                --out     /tmp/ex
 ```
+
+> `digilab verify --truth` accepts either a `.md` table file **or** a `.csv`
+> file directly.
 
 Run the self-test for all registered chips:
 

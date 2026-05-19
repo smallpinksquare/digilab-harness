@@ -7,13 +7,15 @@
 
 ## C1. 中英文档章节级映射
 
-| 英文页面 | 中文镜像 | 结论 |
-|---------|---------|------|
-| `docs/index.md` | `docs/zh/index.md` | **PASS** |
-| `docs/architecture.md` | 无独立镜像；`zh/index.md` 提供中文入口指向英文页 | **PASS（设计选择）** |
-| `docs/dsl_reference.md` | 同上 | **PASS** |
-| `docs/physical_wiring.md` | 同上 | **PASS** |
-| `docs/chip_extension.md` | 同上 | **PASS** |
+
+| 英文页面                      | 中文镜像                            | 结论             |
+| ------------------------- | ------------------------------- | -------------- |
+| `docs/index.md`           | `docs/zh/index.md`              | **PASS**       |
+| `docs/architecture.md`    | 无独立镜像；`zh/index.md` 提供中文入口指向英文页 | **PASS（设计选择）** |
+| `docs/dsl_reference.md`   | 同上                              | **PASS**       |
+| `docs/physical_wiring.md` | 同上                              | **PASS**       |
+| `docs/chip_extension.md`  | 同上                              | **PASS**       |
+
 
 `README.zh-CN.md` 覆盖主 README 的所有节（quick start / 支持芯片 / 特性 / 开发 / 文档 / 许可证），与英文版平行。
 
@@ -28,12 +30,14 @@
 
 `pytest tests/test_examples_regression.py`：**4 passed**
 
-| 目录 | 芯片 | 行数 |
-|------|------|-----|
-| `01_basic_nand2` | 7400 | 4 |
-| `02_bcd_judge_7400_7420` | 7400 + 7420 | 8 |
-| `03_blood_match_74151` | 74151 | 16 |
-| `04_generator_ctrl_74138` | 74138 + 7420 + 7400 | 8 |
+
+| 目录                        | 芯片                  | 行数  |
+| ------------------------- | ------------------- | --- |
+| `01_basic_nand2`          | 7400                | 4   |
+| `02_bcd_judge_7400_7420`  | 7400 + 7420         | 8   |
+| `03_blood_match_74151`    | 74151               | 16  |
+| `04_generator_ctrl_74138` | 74138 + 7420 + 7400 | 8   |
+
 
 ## C4. 课程化字眼
 
@@ -46,3 +50,4 @@
 - CI 仅跑英文路径的 `tests/`，不跑 `course_archive/run_all.py`（已知设计，避免 Linux runner 中文路径编码风险）。
 
 ## Phase C 总体结论：**PASS**
+

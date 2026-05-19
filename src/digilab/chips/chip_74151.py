@@ -38,12 +38,10 @@
 
 from __future__ import annotations
 
-from typing import List
-
 from . import Block, ChipSpec, Pin, PinType
 
 
-def mux8(bits: List[int]) -> List[int]:
+def mux8(bits: list[int]) -> list[int]:
     """完整 12 输入函数：[C, B, A, D0..D7, E_BAR] -> [Y, Y_BAR]。"""
     if len(bits) != 12:
         raise ValueError(f"74151 mux8 需要 12 位输入 [C,B,A,D0..D7,E_BAR]，收到 {len(bits)}")
@@ -57,7 +55,7 @@ def mux8(bits: List[int]) -> List[int]:
     return [y, 1 - y]
 
 
-def _mux8_block_func(bits: List[int]) -> List[int]:
+def _mux8_block_func(bits: list[int]) -> list[int]:
     """Block 视角函数：[C, B, A, D0..D7] -> [Y, Y_BAR]，内部默认 E_BAR=0。"""
     if len(bits) != 11:
         raise ValueError(f"MUX8 需要 11 位输入 [C,B,A,D0..D7]，收到 {len(bits)}")
@@ -114,7 +112,7 @@ def _self_check() -> None:
 
     使能有效时 Y = D[sel]、Ȳ = ¬Y；使能无效时 Y = 0、Ȳ = 1。
     """
-    fails: List[str] = []
+    fails: list[str] = []
     # 取一个不平凡的数据模式 [0, 1, 0, 1, 1, 0, 1, 0]，覆盖所有 D 位
     data = [0, 1, 0, 1, 1, 0, 1, 0]
 
