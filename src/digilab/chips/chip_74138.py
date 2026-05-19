@@ -37,12 +37,10 @@
 
 from __future__ import annotations
 
-from typing import List
-
 from . import Block, ChipSpec, Pin, PinType
 
 
-def decode3(bits: List[int]) -> List[int]:
+def decode3(bits: list[int]) -> list[int]:
     """完整 6 输入译码函数：[A, B, C, G1, G2A_BAR, G2B_BAR] → [Y0..Y7]。
 
     输入位顺序固定为引脚号 [1, 2, 3, 6, 4, 5]（datasheet 自然顺序），
@@ -62,7 +60,7 @@ def decode3(bits: List[int]) -> List[int]:
     return out
 
 
-def _decode3_block_func(addr_bits: List[int]) -> List[int]:
+def _decode3_block_func(addr_bits: list[int]) -> list[int]:
     """Block 暴露给表达式的"用户视角"函数：仅 3 输入地址 [C, B, A] → 8 输出。
 
     使能信号通过 default_enables 显式连到 VCC/GND，verifier 在并查集合并后

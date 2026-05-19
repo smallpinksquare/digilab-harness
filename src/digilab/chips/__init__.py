@@ -13,9 +13,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Callable, Dict, List, Tuple
 
 
 class PinType(str, Enum):
@@ -41,9 +41,9 @@ class Gate:
     """芯片内的一个逻辑门。"""
 
     gate_id: int
-    inputs: List[int]  # 输入引脚号列表（按顺序）
+    inputs: list[int]  # 输入引脚号列表（按顺序）
     output: int  # 输出引脚号
-    func: Callable[[List[int]], int]  # 逻辑函数：输入位列表 → 输出位
+    func: Callable[[list[int]], int]  # 逻辑函数：输入位列表 → 输出位
 
 
 @dataclass
@@ -55,11 +55,11 @@ class Block:
     """
 
     block_id: int
-    inputs: List[int]  # 信号输入引脚（按表达式参数顺序）
-    outputs: List[int]  # 信号输出引脚（按 LHS 索引顺序）
-    func: Callable[[List[int]], List[int]]  # 多输出函数：输入位列表 → 输出位列表
+    inputs: list[int]  # 信号输入引脚（按表达式参数顺序）
+    outputs: list[int]  # 信号输出引脚（按 LHS 索引顺序）
+    func: Callable[[list[int]], list[int]]  # 多输出函数：输入位列表 → 输出位列表
     primitive: str  # 关联的高层原语名（"DECODE3" / "MUX4"）
-    default_enables: List[Tuple[int, str]] = field(default_factory=list)
+    default_enables: list[tuple[int, str]] = field(default_factory=list)
     """默认使能连线：[(pin_number, "VCC"|"GND"), ...]
     用户不显式写使能时，综合器自动加这些显式 netlist 连线。"""
 
@@ -69,20 +69,20 @@ class ChipSpec:
     """器件型号说明（不是芯片实例）。"""
 
     model: str
-    pins: Dict[int, Pin] = field(default_factory=dict)
-    gates: List[Gate] = field(default_factory=list)
-    blocks: List[Block] = field(default_factory=list)
+    pins: dict[int, Pin] = field(default_factory=dict)
+    gates: list[Gate] = field(default_factory=list)
+    blocks: list[Block] = field(default_factory=list)
 
     @property
-    def vcc_pins(self) -> List[int]:
+    def vcc_pins(self) -> list[int]:
         return sorted(n for n, p in self.pins.items() if p.type is PinType.VCC)
 
     @property
-    def gnd_pins(self) -> List[int]:
+    def gnd_pins(self) -> list[int]:
         return sorted(n for n, p in self.pins.items() if p.type is PinType.GND)
 
     @property
-    def nc_pins(self) -> List[int]:
+    def nc_pins(self) -> list[int]:
         return sorted(n for n, p in self.pins.items() if p.type is PinType.NC)
 
     @property

@@ -30,12 +30,10 @@
 
 from __future__ import annotations
 
-from typing import List
-
 from . import Block, ChipSpec, Pin, PinType
 
 
-def mux4(bits: List[int]) -> int:
+def mux4(bits: list[int]) -> int:
     """完整 7 输入函数：[B, A, C0, C1, C2, C3, G_BAR] -> Y。"""
     if len(bits) != 7:
         raise ValueError(f"74153 mux4 需要 7 位输入 [B,A,C0,C1,C2,C3,G_BAR]，收到 {len(bits)}")
@@ -47,7 +45,7 @@ def mux4(bits: List[int]) -> int:
     return data[sel] & 1
 
 
-def _mux4_block_func(bits: List[int]) -> List[int]:
+def _mux4_block_func(bits: list[int]) -> list[int]:
     """Block 视角函数：[B,A,C0,C1,C2,C3] -> [Y]，内部默认 G_BAR=0。"""
     if len(bits) != 6:
         raise ValueError(f"MUX4 需要 6 位输入 [B,A,C0,C1,C2,C3]，收到 {len(bits)}")
@@ -102,7 +100,7 @@ SPEC = make_spec()
 
 def _self_check() -> None:
     """8 行代表性自检：4 种选择 × 使能 on/off。"""
-    fails: List[str] = []
+    fails: list[str] = []
     data = [0, 1, 0, 1]
     for sel in range(4):
         b = (sel >> 1) & 1

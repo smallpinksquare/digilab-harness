@@ -20,7 +20,6 @@ import argparse
 import string
 import sys
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 from .chips.registry import get_spec
 from .common.ast_nodes import Const, Nand, Node, Primitive, Program, Var
@@ -53,11 +52,11 @@ class _ChipPool:
     就视为可用的 X 块来源。新增器件无需修改本类。
     """
 
-    def __init__(self, decl: List[Tuple[str, int]]):
-        self.instances: List[ChipInstance] = []
-        self._free_gates_by_arity: Dict[int, List[Tuple[str, int]]] = {}
-        self._free_blocks_by_primitive: Dict[str, List[Tuple[str, int]]] = {}
-        per_model_count: Dict[str, int] = {}
+    def __init__(self, decl: list[tuple[str, int]]):
+        self.instances: list[ChipInstance] = []
+        self._free_gates_by_arity: dict[int, list[tuple[str, int]]] = {}
+        self._free_blocks_by_primitive: dict[str, list[tuple[str, int]]] = {}
+        per_model_count: dict[str, int] = {}
         for model, count in decl:
             for _ in range(count):
                 idx = per_model_count.get(model, 0)
@@ -75,7 +74,7 @@ class _ChipPool:
                         (name, b.block_id)
                     )
 
-    def alloc_gate(self, arity: int) -> Tuple[str, int]:
+    def alloc_gate(self, arity: int) -> tuple[str, int]:
         """分配一个 arity 输入的未占用门。"""
         bucket = self._free_gates_by_arity.get(arity)
         if not bucket:
@@ -84,7 +83,7 @@ class _ChipPool:
             )
         return bucket.pop(0)
 
-    def alloc_block(self, primitive: str) -> Tuple[str, int]:
+    def alloc_block(self, primitive: str) -> tuple[str, int]:
         """分配一个支持 primitive 的未占用器件块。"""
         bucket = self._free_blocks_by_primitive.get(primitive)
         if not bucket:
@@ -102,10 +101,10 @@ _GND_EP = Endpoint(chip="GND", pin=0)
 
 def _emit_node(
     node: Node,
-    var_endpoints: Dict[str, Endpoint],
+    var_endpoints: dict[str, Endpoint],
     pool: _ChipPool,
     netlist: Netlist,
-    cache: Dict[Node, Endpoint],
+    cache: dict[Node, Endpoint],
 ) -> Endpoint:
     """递归生成节点电路，返回该节点输出的 Endpoint。
 
@@ -154,11 +153,11 @@ def _emit_node(
 
 def _emit_primitive(
     node: Primitive,
-    var_endpoints: Dict[str, Endpoint],
+    var_endpoints: dict[str, Endpoint],
     pool: _ChipPool,
     netlist: Netlist,
-    cache: Dict[Node, Endpoint],
-) -> List[Endpoint]:
+    cache: dict[Node, Endpoint],
+) -> list[Endpoint]:
     """处理多输出原语（DECODE3 / MUX4 等），返回输出端点列表。
 
     步骤：
@@ -212,12 +211,12 @@ def synthesize(prog: Program) -> Netlist:
     netlist.chips = list(pool.instances)
 
     # 输入变量先建虚拟端点：INPUT.<name>
-    var_endpoints: Dict[str, Endpoint] = {
+    var_endpoints: dict[str, Endpoint] = {
         name: Endpoint(chip="INPUT", pin=name) for name in prog.inputs
     }
 
     # 自动 CSE 缓存：AST node → 已分配门的输出 endpoint
-    cache: Dict[Node, Endpoint] = {}
+    cache: dict[Node, Endpoint] = {}
 
     output_set = set(prog.outputs)
 
@@ -280,15 +279,15 @@ def _daisy_chain_connections(netlist: Netlist) -> None:
             src -> d0,  d0 -> d1,  d1 -> d2, ...
         d0 即用户所说的"总输入"，是字典序最小的消费者。
     """
-    by_src: Dict[Endpoint, List[Endpoint]] = {}
-    keep: List[Connection] = []
+    by_src: dict[Endpoint, list[Endpoint]] = {}
+    keep: list[Connection] = []
     for c in netlist.connections:
         if c.dst.chip in _POWER_ENDPOINTS:
             keep.append(c)
         else:
             by_src.setdefault(c.src, []).append(c.dst)
 
-    new_conns: List[Connection] = list(keep)
+    new_conns: list[Connection] = list(keep)
     for src, dsts in by_src.items():
         ordered = sorted(dsts, key=_endpoint_sort_key)
         prev = src
@@ -302,7 +301,7 @@ def _daisy_chain_connections(netlist: Netlist) -> None:
 # ---------- CLI ----------
 
 
-def main(argv: List[str] | None = None) -> int:
+def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(
         description="电路综合器：表达式文件 → circuit.txt + netlist.json",
     )

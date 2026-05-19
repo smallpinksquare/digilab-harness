@@ -8,12 +8,10 @@
 
 from __future__ import annotations
 
-from typing import List
-
 from . import ChipSpec, Gate, Pin, PinType
 
 
-def nand4(bits: List[int]) -> int:
+def nand4(bits: list[int]) -> int:
     if len(bits) != 4:
         raise ValueError(f"7420 NAND4 需要 4 个输入，收到 {len(bits)}")
     return 0 if all(b == 1 for b in bits) else 1

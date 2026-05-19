@@ -10,12 +10,10 @@
 
 from __future__ import annotations
 
-from typing import List
-
 from . import ChipSpec, Gate, Pin, PinType
 
 
-def nand2(bits: List[int]) -> int:
+def nand2(bits: list[int]) -> int:
     if len(bits) != 2:
         raise ValueError(f"7400 NAND2 需要 2 个输入，收到 {len(bits)}")
     a, b = bits

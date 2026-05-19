@@ -13,15 +13,13 @@
 from __future__ import annotations
 
 import importlib.metadata as md
-from typing import Dict, List, Optional
 
-from . import ChipSpec
-from . import chip_7400, chip_7420, chip_74138, chip_74151, chip_74153
+from . import ChipSpec, chip_7400, chip_7420, chip_74138, chip_74151, chip_74153
 
 _MODULES = [chip_7400, chip_7420, chip_74138, chip_74151, chip_74153]
 
 
-def _iter_chip_plugin_entry_points() -> List[md.EntryPoint]:
+def _iter_chip_plugin_entry_points() -> list[md.EntryPoint]:
     """Return every ``digilab.chips`` entry-point (may be empty)."""
     eps = md.entry_points()
     if hasattr(eps, "select"):
@@ -32,18 +30,18 @@ def _iter_chip_plugin_entry_points() -> List[md.EntryPoint]:
     return []
 
 
-def _plugin_spec_from_loaded(loaded: object) -> Optional[ChipSpec]:
+def _plugin_spec_from_loaded(loaded: object) -> ChipSpec | None:
     """Resolve an entry-point load target to a ``ChipSpec`` if possible."""
     if callable(loaded):
         candidate = loaded()
     elif hasattr(loaded, "SPEC"):
-        candidate = getattr(loaded, "SPEC")
+        candidate = loaded.SPEC
     else:
         candidate = loaded
     return candidate if isinstance(candidate, ChipSpec) else None
 
 
-def _merge_plugin_specs(reg: Dict[str, ChipSpec]) -> None:
+def _merge_plugin_specs(reg: dict[str, ChipSpec]) -> None:
     """Augment *reg* with plugin specs; builtins always win on name clash."""
     for ep in _iter_chip_plugin_entry_points():
         try:
@@ -58,7 +56,7 @@ def _merge_plugin_specs(reg: Dict[str, ChipSpec]) -> None:
         reg[spec.model] = spec
 
 
-_REGISTRY: Dict[str, ChipSpec] = {m.SPEC.model: m.SPEC for m in _MODULES}
+_REGISTRY: dict[str, ChipSpec] = {m.SPEC.model: m.SPEC for m in _MODULES}
 _merge_plugin_specs(_REGISTRY)
 
 
@@ -68,5 +66,5 @@ def get_spec(model: str) -> ChipSpec:
     return _REGISTRY[model]
 
 
-def list_models() -> List[str]:
+def list_models() -> list[str]:
     return sorted(_REGISTRY)

@@ -8,8 +8,8 @@ from __future__ import annotations
 
 import csv
 import re
+from collections.abc import Sequence
 from pathlib import Path
-from typing import List, Sequence, Tuple
 
 # 单元格中允许出现的真值
 _VALID = {"0", "1", "X", "x", "-"}
@@ -27,9 +27,9 @@ def _normalize_cell(s: str) -> str:
 # ---------- md → 行列结构 ----------
 
 
-def parse_md_table(text: str) -> Tuple[List[str], List[List[str]]]:
+def parse_md_table(text: str) -> tuple[list[str], list[list[str]]]:
     lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
-    table_rows: List[List[str]] = []
+    table_rows: list[list[str]] = []
     for line in lines:
         if not line.startswith("|"):
             continue
@@ -64,7 +64,7 @@ def write_csv(path: Path, header: Sequence[str], rows: Sequence[Sequence[str]]) 
             w.writerow(list(row))
 
 
-def read_csv(path: Path) -> Tuple[List[str], List[List[str]]]:
+def read_csv(path: Path) -> tuple[list[str], list[list[str]]]:
     with Path(path).open("r", encoding="utf-8", newline="") as f:
         r = list(csv.reader(f))
     if not r:
@@ -77,7 +77,7 @@ def read_csv(path: Path) -> Tuple[List[str], List[List[str]]]:
 # ---------- 一站式：md 文件 → CSV 文件 ----------
 
 
-def md_file_to_csv(md_path: Path, csv_path: Path) -> Tuple[List[str], List[List[str]]]:
+def md_file_to_csv(md_path: Path, csv_path: Path) -> tuple[list[str], list[list[str]]]:
     text = Path(md_path).read_text(encoding="utf-8-sig")
     header, body = parse_md_table(text)
     write_csv(csv_path, header, body)
@@ -89,7 +89,7 @@ def md_file_to_csv(md_path: Path, csv_path: Path) -> Tuple[List[str], List[List[
 
 def split_io(
     header: Sequence[str], inputs: Sequence[str], outputs: Sequence[str]
-) -> Tuple[List[int], List[int]]:
+) -> tuple[list[int], list[int]]:
     """根据期望的 inputs/outputs 名字列表，从 header 中找出列序号。"""
     in_idx = []
     out_idx = []

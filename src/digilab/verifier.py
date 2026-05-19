@@ -25,12 +25,13 @@ import argparse
 import json
 import sys
 from collections import defaultdict, deque
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterator, List, Optional, Set, Tuple
+from typing import Any, Callable
 
 from .chips.registry import get_spec
 from .common.netlist import Endpoint, Netlist
-from .common.tt_io import read_csv, split_io, write_csv
+from .common.tt_io import md_file_to_csv, read_csv, split_io, write_csv
 
 
 class VerifyError(RuntimeError):
@@ -42,7 +43,7 @@ class VerifyError(RuntimeError):
 
 class _UnionFind:
     def __init__(self) -> None:
-        self.parent: Dict[Endpoint, Endpoint] = {}
+        self.parent: dict[Endpoint, Endpoint] = {}
 
     def find(self, x: Endpoint) -> Endpoint:
         self.parent.setdefault(x, x)
@@ -81,21 +82,21 @@ class _Circuit:
             self.uf.union(conn.src, conn.dst)
 
         # 2. 收集每个信号的所有端点（用于诊断）
-        self.signal_endpoints: Dict[Endpoint, Set[Endpoint]] = defaultdict(set)
+        self.signal_endpoints: dict[Endpoint, set[Endpoint]] = defaultdict(set)
         for ep in self._all_endpoints():
             self.signal_endpoints[self.uf.find(ep)].add(ep)
 
         # 3. 对每个芯片实例的每个 gate / block，建一条 unit 记录
         # unit_record: (chip_name, kind, gate_or_block_id, input_signals[],
         #               output_signals[], func: List[int] -> List[int])
-        self.units: List[
-            Tuple[
+        self.units: list[
+            tuple[
                 str,
                 str,
                 int,
-                List[Endpoint],
-                List[Endpoint],
-                Callable[[List[int]], List[int]],
+                list[Endpoint],
+                list[Endpoint],
+                Callable[[list[int]], list[int]],
             ]
         ] = []
         for inst in netlist.chips:
@@ -119,18 +120,18 @@ class _Circuit:
                 self.units.append((inst.name, "block", b.block_id, in_sigs, out_sigs, b.func))
 
         # 4. INPUT / OUTPUT / VCC / GND 的代表节点
-        self.input_signals: Dict[str, Endpoint] = {
+        self.input_signals: dict[str, Endpoint] = {
             n: self.uf.find(Endpoint(chip="INPUT", pin=n)) for n in netlist.inputs
         }
-        self.output_signals: Dict[str, Endpoint] = {}
+        self.output_signals: dict[str, Endpoint] = {}
         for n in netlist.outputs:
             ep = Endpoint(chip="OUTPUT", pin=n)
             if ep not in self.uf.parent:
                 raise VerifyError(f"输出 {n} 没有任何驱动连线")
             self.output_signals[n] = self.uf.find(ep)
 
-        self.vcc_signal: Optional[Endpoint] = None
-        self.gnd_signal: Optional[Endpoint] = None
+        self.vcc_signal: Endpoint | None = None
+        self.gnd_signal: Endpoint | None = None
         vcc_ep = Endpoint(chip="VCC", pin=0)
         gnd_ep = Endpoint(chip="GND", pin=0)
         if vcc_ep in self.uf.parent:
@@ -139,8 +140,8 @@ class _Circuit:
             self.gnd_signal = self.uf.find(gnd_ep)
 
         # 5. 拓扑：每个输出信号映射回驱动它的 unit 下标；冲突即短路
-        self.driver_unit_idx: Dict[Endpoint, int] = {}
-        for idx, (cn, kind, _gbid, _ins, outs_list, _func) in enumerate(self.units):
+        self.driver_unit_idx: dict[Endpoint, int] = {}
+        for idx, (_cn, _kind, _gbid, _ins, outs_list, _func) in enumerate(self.units):
             for outs in outs_list:
                 if outs in self.driver_unit_idx:
                     raise VerifyError(
@@ -150,16 +151,16 @@ class _Circuit:
                 self.driver_unit_idx[outs] = idx
 
         # 6. 拓扑排序 unit
-        self.topo_order: List[int] = self._topo_sort()
+        self.topo_order: list[int] = self._topo_sort()
 
     def _all_endpoints(self) -> Iterator[Endpoint]:
         for c in self.netlist.connections:
             yield c.src
             yield c.dst
 
-    def _topo_sort(self) -> List[int]:
+    def _topo_sort(self) -> list[int]:
         in_deg = [0] * len(self.units)
-        children: Dict[int, List[int]] = defaultdict(list)
+        children: dict[int, list[int]] = defaultdict(list)
         for j, (_, _, _, ins_j, _, _) in enumerate(self.units):
             for sig in ins_j:
                 drv = self.driver_unit_idx.get(sig)
@@ -167,7 +168,7 @@ class _Circuit:
                     children[drv].append(j)
                     in_deg[j] += 1
         q = deque(i for i, d in enumerate(in_deg) if d == 0)
-        order: List[int] = []
+        order: list[int] = []
         while q:
             i = q.popleft()
             order.append(i)
@@ -181,8 +182,8 @@ class _Circuit:
 
     # ---------- 求值 ----------
 
-    def evaluate(self, input_bits: Dict[str, int]) -> Dict[str, int]:
-        sig_value: Dict[Endpoint, int] = {}
+    def evaluate(self, input_bits: dict[str, int]) -> dict[str, int]:
+        sig_value: dict[Endpoint, int] = {}
 
         for name, val in input_bits.items():
             if name not in self.input_signals:
@@ -208,7 +209,7 @@ class _Circuit:
             for sig, v in zip(outs_list, out_bits):
                 sig_value[sig] = v
 
-        result: Dict[str, int] = {}
+        result: dict[str, int] = {}
         for n, sig in self.output_signals.items():
             if sig not in sig_value:
                 raise VerifyError(f"输出 {n} 未被求值（信号 {sig} 无驱动）")
@@ -217,11 +218,11 @@ class _Circuit:
 
 
 def _wrap_gate_func(
-    func: Callable[[List[int]], int],
-) -> Callable[[List[int]], List[int]]:
+    func: Callable[[list[int]], int],
+) -> Callable[[list[int]], list[int]]:
     """把单输出 Gate.func 适配成与 Block.func 同型的 List[int] -> List[int]。"""
 
-    def wrapped(bits: List[int]) -> List[int]:
+    def wrapped(bits: list[int]) -> list[int]:
         return [func(bits)]
 
     return wrapped
@@ -231,13 +232,13 @@ def _wrap_gate_func(
 
 
 def verify(
-    netlist: Netlist, header: List[str], rows: List[List[str]]
-) -> Tuple[List[List[str]], Dict[str, Any]]:
+    netlist: Netlist, header: list[str], rows: list[list[str]]
+) -> tuple[list[list[str]], dict[str, Any]]:
     in_idx, out_idx = split_io(header, netlist.inputs, netlist.outputs)
     circuit = _Circuit(netlist)
 
-    actual_rows: List[List[str]] = []
-    diffs: List[Dict[str, Any]] = []
+    actual_rows: list[list[str]] = []
+    diffs: list[dict[str, Any]] = []
     pass_count = 0
 
     for r_i, row in enumerate(rows):
@@ -270,7 +271,7 @@ def verify(
             pass_count += 1
         actual_rows.append(actual_row)
 
-    report: Dict[str, Any] = {
+    report: dict[str, Any] = {
         "total_rows": len(rows),
         "passed": pass_count,
         "failed": len(rows) - pass_count,
@@ -282,18 +283,29 @@ def verify(
 # ---------- CLI ----------
 
 
-def main(argv: List[str] | None = None) -> int:
+def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(
         description="电路验证器：netlist + 期望真值表 → 实际真值表 + 验证报告",
     )
     ap.add_argument("--netlist", required=True, type=Path, help="netlist.json")
-    ap.add_argument("--truth", required=True, type=Path, help="truth_table.csv")
+    ap.add_argument(
+        "--truth",
+        required=True,
+        type=Path,
+        help="truth_table.csv or truth_table.md (Markdown table auto-converted)",
+    )
     ap.add_argument("--out", required=True, type=Path, help="输出目录")
     args = ap.parse_args(argv)
 
     try:
         netlist = Netlist.load(args.netlist)
-        header, rows = read_csv(args.truth)
+        truth_path: Path = args.truth
+        if truth_path.suffix.lower() == ".md":
+            csv_path = args.out / "truth_table.csv"
+            args.out.mkdir(parents=True, exist_ok=True)
+            header, rows = md_file_to_csv(truth_path, csv_path)
+        else:
+            header, rows = read_csv(truth_path)
         actual_rows, report = verify(netlist, header, rows)
     except Exception as exc:  # noqa: BLE001
         print(f"错误: {exc}", file=sys.stderr)

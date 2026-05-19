@@ -20,7 +20,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any
 
 SPECIAL_ENDPOINTS = {"INPUT", "OUTPUT", "VCC", "GND", "NC"}
 
@@ -28,13 +28,13 @@ SPECIAL_ENDPOINTS = {"INPUT", "OUTPUT", "VCC", "GND", "NC"}
 @dataclass(frozen=True)
 class Endpoint:
     chip: str
-    pin: Union[int, str]
+    pin: int | str
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {"chip": self.chip, "pin": self.pin}
 
     @staticmethod
-    def from_dict(d: Dict[str, Any]) -> "Endpoint":
+    def from_dict(d: dict[str, Any]) -> Endpoint:
         return Endpoint(chip=d["chip"], pin=d["pin"])
 
     def is_special(self) -> bool:
@@ -49,11 +49,11 @@ class Connection:
     src: Endpoint
     dst: Endpoint
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {"from": self.src.to_dict(), "to": self.dst.to_dict()}
 
     @staticmethod
-    def from_dict(d: Dict[str, Any]) -> "Connection":
+    def from_dict(d: dict[str, Any]) -> Connection:
         return Connection(src=Endpoint.from_dict(d["from"]), dst=Endpoint.from_dict(d["to"]))
 
 
@@ -62,15 +62,15 @@ class ChipInstance:
     name: str  # e.g. "7400_A"
     type: str  # e.g. "7400"
 
-    def to_dict(self) -> Dict[str, str]:
+    def to_dict(self) -> dict[str, str]:
         return {"name": self.name, "type": self.type}
 
     @staticmethod
-    def from_dict(d: Dict[str, Any]) -> "ChipInstance":
+    def from_dict(d: dict[str, Any]) -> ChipInstance:
         return ChipInstance(name=d["name"], type=d["type"])
 
 
-def _endpoint_sort_key(ep: Endpoint) -> Tuple[int, str, int, str]:
+def _endpoint_sort_key(ep: Endpoint) -> tuple[int, str, int, str]:
     """先按是否特殊端点（特殊端点优先），再按 chip 名字典序，
     再按 pin（数字优先于字符串），保证排序稳定。"""
     is_normal = 0 if ep.is_special() else 1
@@ -81,16 +81,16 @@ def _endpoint_sort_key(ep: Endpoint) -> Tuple[int, str, int, str]:
 
 def _connection_sort_key(
     c: Connection,
-) -> Tuple[Tuple[int, str, int, str], Tuple[int, str, int, str]]:
+) -> tuple[tuple[int, str, int, str], tuple[int, str, int, str]]:
     return (_endpoint_sort_key(c.src), _endpoint_sort_key(c.dst))
 
 
 @dataclass
 class Netlist:
-    chips: List[ChipInstance] = field(default_factory=list)
-    inputs: List[str] = field(default_factory=list)
-    outputs: List[str] = field(default_factory=list)
-    connections: List[Connection] = field(default_factory=list)
+    chips: list[ChipInstance] = field(default_factory=list)
+    inputs: list[str] = field(default_factory=list)
+    outputs: list[str] = field(default_factory=list)
+    connections: list[Connection] = field(default_factory=list)
 
     def add_connection(self, src: Endpoint, dst: Endpoint) -> None:
         self.connections.append(Connection(src, dst))
@@ -114,7 +114,7 @@ class Netlist:
         self.sort()
         return "\n".join(f"{c.src.text()} -> {c.dst.text()}" for c in self.connections) + "\n"
 
-    def save(self, out_dir: Path) -> Tuple[Path, Path]:
+    def save(self, out_dir: Path) -> tuple[Path, Path]:
         out_dir = Path(out_dir)
         out_dir.mkdir(parents=True, exist_ok=True)
         nj = out_dir / "netlist.json"
@@ -124,7 +124,7 @@ class Netlist:
         return nj, ct
 
     @staticmethod
-    def from_json(text: str) -> "Netlist":
+    def from_json(text: str) -> Netlist:
         d = json.loads(text)
         return Netlist(
             chips=[ChipInstance.from_dict(c) for c in d.get("chips", [])],
@@ -134,5 +134,5 @@ class Netlist:
         )
 
     @staticmethod
-    def load(path: Path) -> "Netlist":
+    def load(path: Path) -> Netlist:
         return Netlist.from_json(Path(path).read_text(encoding="utf-8"))
